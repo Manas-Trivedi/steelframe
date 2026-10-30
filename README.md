@@ -23,6 +23,8 @@ The name comes from the phrase "the steel frame of India", long used for the civ
 
 Most current affairs products fall into two groups. News scrapers collect headlines and leave the aspirant to work out what is exam-relevant. Coaching editorials do that work well, but they are written by hand, on a fixed schedule, behind a paywall. Steelframe aims to match the quality of the second group with the coverage and speed of the first.
 
+> Steelframe is an independent project. It is not affiliated with, endorsed by, or connected to the Union Public Service Commission. "UPSC" appears here only to describe the exam.
+
 > **Status: pre-alpha.** Nothing here is production-ready. The repository currently holds the project definition and, shortly, the evaluation harness. See the [roadmap](#roadmap).
 
 ## Principles
@@ -84,6 +86,8 @@ The repository is at its starting point. Directories are added as each phase beg
 ```
 steelframe/
   docs/
+    evals/
+      PAST_PAPERS_POLICY.md
     PRODUCT.md
     QUALITY_RUBRIC.md
   LICENSE
