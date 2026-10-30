@@ -91,8 +91,11 @@ steelframe/
   docs/
     evals/
       PAST_PAPERS_POLICY.md
+      PAST_PAPER_TAGGING.md
     PRODUCT.md
     QUALITY_RUBRIC.md
+  tools/
+    past_papers/
   LICENSE
   README.md
 ```
