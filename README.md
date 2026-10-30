@@ -85,6 +85,8 @@ The repository is at its starting point. Directories are added as each phase beg
 
 ```
 steelframe/
+  data/
+    past_papers/
   docs/
     evals/
       PAST_PAPERS_POLICY.md
