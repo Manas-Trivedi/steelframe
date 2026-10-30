@@ -172,12 +172,19 @@ Passage A scores 44 and fails the minimum of 70. Its Accuracy score is 3, so the
 
 The four dimensions that most affect whether an aspirant trusts a piece (Accuracy, Judgment, Evidence quality, Consistency) carry 65 of the 100 points. Reviews of existing coaching material show that exam structure and visuals are already strong everywhere, so Exam fit and Readability carry less weight. They must be matched, not beaten.
 
-## What is still open
+## What is still open, and how we plan to close it
 
-| Question | Needed |
-|---|---|
-| Are the weights right? | Reviewers to score sample pieces, and a check of whether scores track how they would choose |
-| Are the pass marks (70 total, 14 of 20) right? | A pilot with real reviewers |
-| How is Judgment judged fairly, since it is the most subjective? | Reviewer training, with examples |
-| How are claims sampled for the Accuracy check? | A sampling rule, set in the evaluation phase |
-| Who reviews? | At least three serious aspirants or teachers per round |
+Each row has a starting proposal from desk research. The last column is what only real reviewers (serious aspirants and teachers) can settle.
+
+| Question | Starting proposal | Needs real input |
+|---|---|---|
+| Do reviewers agree with each other? | Measure agreement per dimension with [Krippendorff's alpha](https://en.wikipedia.org/wiki/Krippendorff%27s_alpha). By its usual convention, 0.800 or higher is reliable, 0.667 to 0.800 supports only tentative conclusions, and below 0.667 should be discarded. These are conventions, not laws, so set the bar before looking at results and report a confidence interval ([guide](https://arxiv.org/pdf/2008.00977)). Use the ordinal form for 1 to 5 scores. | A pilot round: 3 or more reviewers scoring the same 10 to 20 pieces |
+| How do we keep Judgment fair, since it is the most subjective? | If agreement on a dimension falls below 0.667, rewrite its score descriptions and retrain reviewers before using that dimension to decide anything. | Reviewer training sessions with worked examples |
+| Do the Exam fit anchors match what examiners reward? | UPSC publishes no official marking scheme for Mains. Evaluation is anonymous and holistic. Coaching sources describe common criteria: the answer addresses what was asked, has clear structure, and ends with a way forward or balanced view ([example](https://superkalam.com/blog/how-to-evaluate-answers-for-upsc-mains)). These are coaching opinions, not UPSC rules, so treat them as hints. | Teachers who have evaluated Mains scripts, to check the anchors |
+| How many claims do we check for Accuracy? | For the 20-issue benchmark, check **every** claim, since the pieces are few. In production, draw a random sample each week. With zero errors found, a sample of 59 claims gives 95% confidence that the true error rate is under 5%, and about 299 gives under 1% ([calculator](https://www.learnleansigma.com/calculator/attribute-sampling-calculator/), [paper](https://people.csail.mit.edu/rivest/pubs/Riv06d.pdf)). If any error is found, the sample must grow. | A decision on the acceptable error rate, and a statistician's check |
+| Are the weights right? | Keep as proposed. Compare the weighted total with the reviewers' overall preference in the pilot. | Pilot data: do totals predict which piece a reviewer would rather read? |
+| Are the pass marks (70 total, 14 of 20) right? | Keep as proposed. | The same pilot |
+| How many reviewers? | At least three per piece. The research found no standard minimum, so this is our choice. | Pilot data on how much agreement improves with more reviewers |
+| Who reviews? | At least three serious aspirants or teachers per round. | Recruiting them (an evaluation-phase task) |
+
+The 59-claim figure comes from informal calculators and a statistics paper. For a formal audit, use an established sampling method.
