@@ -91,6 +91,7 @@ steelframe/
     syllabus/
   docs/
     evals/
+      ACCURACY_AUDIT.md
       PAST_PAPERS_POLICY.md
       BACKTEST.md
       BENCHMARK_SET.md
