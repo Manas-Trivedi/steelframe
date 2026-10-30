@@ -17,6 +17,8 @@
 
 Steelframe is an agentic system for UPSC Civil Services preparation. Every day it reads the primary sources, decides what matters for the exam, and produces a structured editorial: the issue explained, linked to the syllabus, with a Mains question and Prelims practice attached.
 
+For what the first version includes and leaves out, see the [product definition](docs/PRODUCT.md).
+
 The name comes from the phrase "the steel frame of India", long used for the civil service itself.
 
 Most current affairs products fall into two groups. News scrapers collect headlines and leave the aspirant to work out what is exam-relevant. Coaching editorials do that work well, but they are written by hand, on a fixed schedule, behind a paywall. Steelframe aims to match the quality of the second group with the coverage and speed of the first.
@@ -82,6 +84,7 @@ The repository is at its starting point. Directories are added as each phase beg
 ```
 steelframe/
   docs/
+    PRODUCT.md
     QUALITY_RUBRIC.md
   LICENSE
   README.md
