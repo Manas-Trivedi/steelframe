@@ -27,7 +27,7 @@ Most current affairs products fall into two groups. News scrapers collect headli
 
 | Principle | What it means in practice |
 |---|---|
-| **Evaluation before features** | We do not build the app until the writing beats a defined benchmark, judged blind by serious aspirants and teachers. |
+| **Evaluation before features** | We do not build the app until the writing beats a defined benchmark, judged blind by serious aspirants and teachers against the [quality rubric](docs/QUALITY_RUBRIC.md). |
 | **Every claim has a source** | A claim that cannot be traced to a primary document does not ship. |
 | **Exam-shaped, not news-shaped** | Content is selected and framed by the syllabus and past papers, not by what trended. |
 | **Humans stay accountable** | A human editor signs off on output until measured error rates justify less review. |
@@ -58,7 +58,7 @@ The planned pipeline is a fixed sequence of specialised stages. The exact design
 | Researcher | Pull in primary documents, background and data. |
 | Writer | Produce the editorial in the agreed format. |
 | Fact-checker | An independent pass that verifies each claim against its cited source. |
-| Examiner | Score the draft against the quality rubric and return weak drafts for revision. |
+| Examiner | Score the draft against the [quality rubric](docs/QUALITY_RUBRIC.md) and return weak drafts for revision. |
 
 ## Roadmap
 
@@ -81,6 +81,8 @@ The repository is at its starting point. Directories are added as each phase beg
 
 ```
 steelframe/
+  docs/
+    QUALITY_RUBRIC.md
   LICENSE
   README.md
 ```
