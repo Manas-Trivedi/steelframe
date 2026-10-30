@@ -1,0 +1,282 @@
+# Topic taxonomy for the General Studies papers.
+#
+# Built by the project from the UPSC syllabus in the Civil Services Examination
+# 2026 notification, Section III (Syllabi), read on 30 October 2026:
+#   https://www.upsc.gov.in/sites/default/files/Notif-CSP-2026-Engl-060226Rev.pdf
+# Topic names are our own short wording, not copied from the notification.
+# One topic per syllabus line, so a question can be tagged to the line it tests.
+#
+# Fields
+#   id      stable key used in tags
+#   paper   where the syllabus line sits: GS1 to GS4 (Mains), or PRE (Prelims-led)
+#   name    short name
+#   covers  what the topic includes, in our words
+#
+# Ids never change once published. Add new ids. Never reuse old ones.
+#
+# Tags also carry a separate flag that is not part of this list:
+#   ca  yes if answering needs recent news (roughly the last 18 months), no if it is static knowledge
+
+version: '0.1'
+source_notification: Civil Services Examination 2026
+topics:
+- id: G1.ART
+  paper: GS1
+  name: Art, literature and architecture
+  covers: Art forms, literature and architecture from ancient to modern times
+- id: G1.MOD
+  paper: GS1
+  name: Modern Indian history
+  covers: Events, people and issues from the mid-18th century to the present
+- id: G1.FRE
+  paper: GS1
+  name: Freedom struggle
+  covers: Stages of the freedom movement and who contributed, from different regions
+- id: G1.POST
+  paper: GS1
+  name: Post-independence consolidation
+  covers: Integration and reorganisation of the country after 1947
+- id: G1.WORLD
+  paper: GS1
+  name: World history
+  covers: 'From the 18th century: industrial revolution, wars, borders, colonisation, political philosophies'
+- id: G1.SOC
+  paper: GS1
+  name: Indian society and diversity
+  covers: Salient features of Indian society and its diversity
+- id: G1.WOM
+  paper: GS1
+  name: Women, population, poverty, urbanisation
+  covers: Role of women, population issues, poverty, urban problems and remedies
+- id: G1.GLOB
+  paper: GS1
+  name: Globalisation and society
+  covers: Effects of globalisation on Indian society
+- id: G1.EMP
+  paper: GS1
+  name: Empowerment, communalism, regionalism, secularism
+  covers: Social empowerment and the politics of identity
+- id: G1.PHYS
+  paper: GS1
+  name: World physical geography
+  covers: Salient features of the physical geography of the world
+- id: G1.RES
+  paper: GS1
+  name: Resources and industry location
+  covers: Where key natural resources are, and why industries locate where they do
+- id: G1.GEOPH
+  paper: GS1
+  name: Geophysical phenomena and change
+  covers: Earthquakes, tsunamis, volcanoes, cyclones, and changes in water bodies, ice caps, flora and fauna
+- id: G2.CONST
+  paper: GS2
+  name: 'Constitution: evolution and features'
+  covers: Historical basis, features, amendments, key provisions, basic structure
+- id: G2.FED
+  paper: GS2
+  name: Federalism and devolution
+  covers: Union and state functions, federal issues, devolution to local levels
+- id: G2.SEP
+  paper: GS2
+  name: Separation of powers and dispute redressal
+  covers: Relations between organs of government and how disputes are settled
+- id: G2.COMP
+  paper: GS2
+  name: Comparative constitutions
+  covers: The Indian scheme compared with other countries
+- id: G2.LEG
+  paper: GS2
+  name: Parliament and state legislatures
+  covers: Structure, functioning, business, powers and privileges
+- id: G2.EXEC
+  paper: GS2
+  name: Executive, judiciary, pressure groups
+  covers: How ministries, courts and groups work in the polity
+- id: G2.RPA
+  paper: GS2
+  name: Elections and representation law
+  covers: Salient features of the Representation of the People Act and elections
+- id: G2.CONBOD
+  paper: GS2
+  name: Constitutional posts and bodies
+  covers: Appointments, powers and duties of constitutional office-holders and bodies
+- id: G2.STAT
+  paper: GS2
+  name: Statutory and regulatory bodies
+  covers: Statutory, regulatory and quasi-judicial bodies
+- id: G2.POLICY
+  paper: GS2
+  name: Government policies and interventions
+  covers: Design and implementation of policies for development in various sectors
+- id: G2.NGO
+  paper: GS2
+  name: 'Development actors: NGOs and SHGs'
+  covers: Roles of NGOs, self-help groups, donors, charities and other stakeholders
+- id: G2.WELF
+  paper: GS2
+  name: Welfare of vulnerable sections
+  covers: Schemes, laws and bodies for vulnerable groups, and how well they work
+- id: G2.SOCSEC
+  paper: GS2
+  name: Health, education and human resources
+  covers: Management of social services
+- id: G2.POV
+  paper: GS2
+  name: Poverty and hunger
+  covers: Issues relating to poverty and hunger
+- id: G2.GOV
+  paper: GS2
+  name: Governance and accountability
+  covers: Transparency, e-governance, citizens' charters, institutional measures
+- id: G2.CIV
+  paper: GS2
+  name: Role of civil services
+  covers: Civil services in a democracy
+- id: G2.NEIGH
+  paper: GS2
+  name: India and its neighbourhood
+  covers: Relations with neighbouring countries
+- id: G2.GROUP
+  paper: GS2
+  name: Groupings and agreements
+  covers: Bilateral, regional and global groupings and agreements involving or affecting India
+- id: G2.POLINF
+  paper: GS2
+  name: Other countries' policies and diaspora
+  covers: How other countries' policies and politics affect India, and the Indian diaspora
+- id: G2.INST
+  paper: GS2
+  name: International institutions
+  covers: Structure and mandate of major international bodies and fora
+- id: G3.ECON
+  paper: GS3
+  name: Indian economy and growth
+  covers: Planning, resource mobilisation, growth, development, employment
+- id: G3.INCL
+  paper: GS3
+  name: Inclusive growth
+  covers: Inclusive growth and the issues it raises
+- id: G3.BUDG
+  paper: GS3
+  name: Government budgeting
+  covers: Government budgeting
+- id: G3.AGRI
+  paper: GS3
+  name: 'Agriculture: crops, irrigation, marketing'
+  covers: Cropping patterns, irrigation, storage, transport, marketing, farm technology
+- id: G3.SUBS
+  paper: GS3
+  name: Subsidies, MSP, PDS, food security
+  covers: Farm subsidies, minimum support prices, public distribution, buffer stocks, food security
+- id: G3.FOOD
+  paper: GS3
+  name: Food processing
+  covers: Food processing industries and their supply chains
+- id: G3.LAND
+  paper: GS3
+  name: Land reforms
+  covers: Land reforms in India
+- id: G3.LIB
+  paper: GS3
+  name: Liberalisation and industrial policy
+  covers: Effects of liberalisation, and changes in industrial policy
+- id: G3.INFRA
+  paper: GS3
+  name: Infrastructure
+  covers: Energy, ports, roads, airports, railways
+- id: G3.INV
+  paper: GS3
+  name: Investment models
+  covers: Investment models
+- id: G3.SCI
+  paper: GS3
+  name: Science and technology developments
+  covers: Developments, applications and effects in everyday life
+- id: G3.INDIG
+  paper: GS3
+  name: Indian achievements and indigenisation
+  covers: Achievements of Indians in science and technology, and developing technology at home
+- id: G3.IT
+  paper: GS3
+  name: IT, space, robotics, biotech, IPR
+  covers: Awareness in IT, space, computers, robotics, nanotechnology, biotechnology, intellectual property
+- id: G3.ENV
+  paper: GS3
+  name: Conservation, pollution and EIA
+  covers: Conservation, pollution and degradation, environmental impact assessment
+- id: G3.BIO
+  paper: GS3
+  name: Biodiversity, ecology and climate
+  covers: Biodiversity, ecology and climate change at a general level
+- id: G3.DIS
+  paper: GS3
+  name: Disaster management
+  covers: Disasters and how they are managed
+- id: G3.EXT
+  paper: GS3
+  name: Development and extremism
+  covers: Links between development and the spread of extremism
+- id: G3.EXTACT
+  paper: GS3
+  name: External actors and internal security
+  covers: How outside state and non-state actors create internal security challenges
+- id: G3.CYBER
+  paper: GS3
+  name: Cyber security and money laundering
+  covers: Communication networks, media, social media, cyber security, money laundering
+- id: G3.BORDER
+  paper: GS3
+  name: Border security and organised crime
+  covers: Border-area security, and links between organised crime and terrorism
+- id: G3.FORCES
+  paper: GS3
+  name: Security forces and agencies
+  covers: The mandate of security forces and agencies
+- id: G4.ETH
+  paper: GS4
+  name: Ethics and human interface
+  covers: Ethics in human actions and relationships, human values, role of institutions in inculcating values
+- id: G4.ATT
+  paper: GS4
+  name: Attitude
+  covers: 'Attitude: structure, function, influence, persuasion'
+- id: G4.APT
+  paper: GS4
+  name: Aptitude and foundational values
+  covers: Integrity, impartiality, objectivity, dedication, empathy, tolerance
+- id: G4.EI
+  paper: GS4
+  name: Emotional intelligence
+  covers: Emotional intelligence and its use in administration
+- id: G4.THINK
+  paper: GS4
+  name: Moral thinkers
+  covers: Contributions of moral thinkers and philosophers from India and the world
+- id: G4.PUB
+  paper: GS4
+  name: Public service values and ethics
+  covers: Ethical issues and dilemmas in public administration, accountability, corporate governance
+- id: G4.PROB
+  paper: GS4
+  name: Probity in governance
+  covers: Public service, transparency, RTI, codes of conduct, service delivery, corruption
+- id: G4.CASE
+  paper: GS4
+  name: Case studies
+  covers: Case studies on the above
+- id: X.HISTANC
+  paper: PRE
+  name: Ancient and medieval India
+  covers: History of India before the modern period
+- id: X.GEOIN
+  paper: PRE
+  name: Indian geography
+  covers: Physical, social and economic geography of India, including places and maps
+- id: X.SCIGEN
+  paper: PRE
+  name: General science
+  covers: General science questions that do not need specialist knowledge
+- id: X.OTHER
+  paper: PRE
+  name: Other
+  covers: Does not fit any topic above
