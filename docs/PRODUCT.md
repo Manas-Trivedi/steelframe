@@ -108,3 +108,60 @@ If step 5 or step 6 fails twice, the draft is not published that day. A human de
 | Humans stay accountable | A human editor approves every piece until error rates justify less review |
 | Respect the sources | We link to and summarise sources within their terms, with no wholesale copying |
 | Open | The code and the rubric are public under the Apache License 2.0 |
+
+## The reading experience
+
+This describes the intended feel. The detailed design comes in the design phase.
+
+| Screen | What the reader sees |
+|---|---|
+| **Today** | About eight issues, ranked by how likely they are to matter for the exam. Each shows its topic, read time and a small relevance bar. The list ends with "that is today", so there is no endless scroll. |
+| **Reader** | A calm page built for reading. A reader picks a depth: brief, editorial or deep dive. Claims carry a faint underline. Tapping one opens the source and the passage. Syllabus topics and past questions sit in the margin. The reader can save, highlight and add notes. Three recall questions come at the end. |
+| **Syllabus map** | Every syllabus topic as a point, sized by how much news touched it in the last 30 days. Lines join topics that the same event touches. The reader's recent reading is traced across it. Tapping a topic lists its editorials. On weak phones it becomes a flat tile view with the same information. |
+| **Revision** | Questions the reader got wrong, returned after a few days. |
+| **Account** | Saved items, highlights and notes, a streak calendar, and preferences. |
+
+Design rules:
+- Reading comes first. No ads, banners or clutter.
+- Motion appears only where it explains something, such as opening a source or zooming the map.
+- The site must work well on low-end Android phones.
+- The syllabus map is the one showpiece. The rest stays quiet.
+
+## Decisions and the alternatives we ruled out
+
+| Decision | Chosen | Other options, and why not |
+|---|---|---|
+| How wide is the first version? | Daily GS editorials only | **Add Mains answer feedback:** valuable, but poor feedback would damage trust, so it waits for its own evaluation. **Add test series and courses:** a different product, with a different cost. |
+| What do we write from? | Primary documents first, with newspapers used to find stories and shown as labelled opinion | **One newspaper editorial as the base:** inherits one writer's framing and errors, and its facts are second-hand. **Aggregating news items:** shallow, and repeats whatever the outlets got wrong. |
+| Reading depth | Three layers built from one set of sourced claims | **One fixed length:** forces every reader into the same time budget. **Separate pieces per length:** the figures could drift apart. |
+| Where saved items live | In a reader account | **Browser storage only:** notes vanish when data is cleared. **No saving:** fails the use case, since saving and highlighting matter to aspirants. |
+| What the syllabus map shows | What has been in the news, by topic | **A "percent of syllabus covered" tracker:** misleading, since current affairs has no finish line. **No map:** loses the one view that shows how issues connect. |
+| Who approves publication | A human editor, every piece | **Fully automatic:** too risky until error rates are measured. |
+
+## What can go wrong
+
+| Risk | What it would look like | How we respond |
+|---|---|---|
+| A factual error is published | A wrong figure or attribution reaches readers | The claim check and the accuracy gate come first. If one still gets through, we correct it visibly, with the date and a note |
+| A source disappears or changes after we cite it | The link to the passage breaks, or shows different text | Keep a dated copy of the cited passage where the source's terms allow it, and show it alongside the link |
+| A copyright or terms complaint | A source owner objects to our use | Use official government texts first, summarise instead of copying, and take down on request. The reuse limits of each source are checked before it is used |
+| The pipeline or a source is down | No edition for the day | Say so openly. Do not publish a partial or unchecked edition. A failed run is retried, and an outage is never reported as "done" |
+| Quality drifts as models or sources change | Scores fall slowly | The examiner scores every piece, and the benchmark is re-run on a schedule |
+| Reviewers disagree | Rubric scores are noisy | Measure agreement per dimension, and revise unclear score descriptions before relying on them |
+| The human editor becomes the bottleneck | Fewer editorials per day than planned | Publish fewer, better pieces, and measure review time per piece |
+| Aspirants do not switch | Low return visits in the closed beta | Treat retention as the main test of the first release, and learn why before adding features |
+| Cost per editorial runs away | A heavy day multiplies calls | Set a cost limit per piece, count calls per item at normal load and during failures, and avoid retrying errors that cannot succeed |
+| A sensitive topic is handled badly | A politically charged story is framed one-sidedly | Show competing views as views, with their sources, and have the editor check it |
+
+## What is still open
+
+| Question | Notes |
+|---|---|
+| What may we reuse from each government and court source? | To be answered source by source in the knowledge base phase |
+| Who is the human editor, and how many hours does review need per day? | Affects how many editorials per day the first version can carry |
+| What is the target cost per editorial? | To be set after the first pipeline run |
+| How is the project sustained, given it is free and open source? | Not decided. Pricing stays out of the first version |
+| How are corrections shown to readers? | The need is settled. The design is not |
+| How do readers sign in, and what do we store about them? | Needs a privacy review before accounts are built |
+| Should Hindi be added, and when? | Depends on proving quality in English first |
+| How are reviewers recruited for blind review? | An evaluation-phase task |
