@@ -94,6 +94,8 @@ steelframe/
       PAST_PAPERS_POLICY.md
       BACKTEST.md
       BENCHMARK_SET.md
+      BLIND_REVIEW.md
+      forms/
       PAST_PAPER_TAGGING.md
     PRODUCT.md
     QUALITY_RUBRIC.md
