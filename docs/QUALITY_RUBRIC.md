@@ -25,7 +25,7 @@ This document turns "good enough" into a score. It is the test every editorial m
 
 1. A reviewer reads a piece without knowing whether it is Steelframe's or a reference piece (a **blind review**).
 2. The reviewer scores each dimension below from 1 to 5, using the descriptions in the tables.
-3. Each score is multiplied by its weight. The total is out of 100.
+3. Each score is divided by 5 and multiplied by its weight, so a 5 earns the full weight. The total is out of 100.
 4. At least three reviewers score each piece. The final score is the average.
 
 ## Dimensions and weights
@@ -135,6 +135,38 @@ The goal is to beat established coaching material, not only to be good. The test
    - its average total beats the reference piece's on at least 14 of the 20 issues (70%), and
    - its average Accuracy score is not lower than the reference piece's, and
    - no Steelframe piece fails the accuracy gate.
+
+## Worked example
+
+Two short passages on the same question: should India widen its inflation target band? They were written to illustrate the scoring. They are not real Steelframe output, and bracketed items stand for links that a real piece would carry.
+
+**Passage A**
+
+> India follows flexible inflation targeting. The target is 4% with a band of 2% on either side. There are many arguments for and against widening the band. For widening, it gives flexibility. Against, it reduces credibility. Experts say supply shocks matter. For example, if onions become costly in some year, the central bank may struggle. Way forward: the government should review the framework and take all stakeholders into account.
+
+**Passage B**
+
+> India's framework sets a 4% consumer-price inflation target with a tolerance band of 2 percentage points either side. The Central Government notifies it, after consulting the Reserve Bank, under Section 45ZA of the RBI Act, 1934 [source: the Act]. The six-member Monetary Policy Committee sets the policy rate to meet it [source: the Act].
+>
+> The question is whether a fixed band suits price spikes that come from supply, such as a poor harvest, which a rate change reaches only slowly.
+>
+> The strongest case for keeping the band is that a clear number anchors expectations and holds the central bank to account. The strongest case for widening it is that a rate rise cannot lower the price of a crop made scarce by weather, so repeated breaches may reflect shocks, not policy failure.
+>
+> [The piece then states which case it finds stronger and why.] Linked past question: [GS3 question on the framework].
+
+| Dimension | Weight | A | B | Why |
+|---|---|---|---|---|
+| Accuracy | 25 | 3 | 5 | A is true but cites nothing. B links each claim to the Act |
+| Judgment | 20 | 1 | 4 | A lists "for" and "against" and stops. B names the strongest case on each side and commits to a view |
+| Evidence quality | 10 | 1 | 3 | A's example is hypothetical. B's mechanism is real but has no dated case |
+| Exam fit | 10 | 2 | 4 | A cannot support a Mains answer. B gives structure and a way to argue |
+| Linking | 10 | 1 | 4 | A links to nothing. B links a past question |
+| Consistency | 10 | 4 | 5 | Both agree with themselves. B is checkable against the Act |
+| Readability | 10 | 3 | 4 | A is vague. B is short and clear |
+| India link | 5 | 3 | 5 | A mentions India only. B names the Act, the committee and who notifies the target |
+| **Total (out of 100)** | | **44** | **86** | |
+
+Passage A scores 44 and fails the minimum of 70. Its Accuracy score is 3, so the accuracy gate alone would not stop it, but the total does. Passage B scores 86 and passes. The gap comes mostly from Judgment, Evidence quality and Linking, which is where the review of existing coaching material found the most room to improve.
 
 ## Why these weights
 
