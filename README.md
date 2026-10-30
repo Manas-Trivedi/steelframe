@@ -91,6 +91,7 @@ steelframe/
   docs/
     evals/
       PAST_PAPERS_POLICY.md
+      BACKTEST.md
       PAST_PAPER_TAGGING.md
     PRODUCT.md
     QUALITY_RUBRIC.md
