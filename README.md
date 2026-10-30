@@ -86,12 +86,14 @@ The repository is at its starting point. Directories are added as each phase beg
 ```
 steelframe/
   data/
+    benchmark/
     past_papers/
     syllabus/
   docs/
     evals/
       PAST_PAPERS_POLICY.md
       BACKTEST.md
+      BENCHMARK_SET.md
       PAST_PAPER_TAGGING.md
     PRODUCT.md
     QUALITY_RUBRIC.md
