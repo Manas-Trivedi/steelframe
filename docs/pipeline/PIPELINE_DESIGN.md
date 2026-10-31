@@ -1,6 +1,6 @@
 # Pipeline design
 
-Status: draft 0.1, written 31 October 2026. Prices come from Anthropic's published list as cached on 6 October 2026. Token counts are assumptions to be replaced by measurements from the first run.
+Status: draft 0.2, updated 31 October 2026. **Decision: free models only, no exceptions.** Quotas and token counts are assumptions to be replaced by measurements from the first run.
 
 ## What this is for
 
@@ -32,11 +32,11 @@ This answers the question "is it agentic?": yes, where it pays (research), and n
 | Stage | Job | Model | Why this model | Checked by |
 |---|---|---|---|---|
 | Scout | Fetch the day's items, drop duplicates | None (plain code) | Fetching and hashing need no model | Source run records (see [storage design](../knowledge-base/STORAGE_AND_RETRIEVAL.md)) |
-| Triage | Score exam relevance, tag a syllabus topic, link past questions | `claude-haiku-5-5` | Many short items, a simple judgement, cheapest model. Run through the batch interface at half price | A labelled sample, measured against the back-test |
-| Researcher | Gather the evidence pack for each chosen issue | `claude-sonnet-5-5`, as a bounded agent loop | Needs to pick tools and read long documents, but not to write well | Writer and Fact-checker both |
-| Writer | Write the claims, then the three reading depths, the Mains question and the recall questions | `claude-opus-5-5` | The writing is the product, so this is where the strongest affordable model goes | Fact-checker, Examiner |
-| Fact-checker | Check every claim against the passage it cites | `claude-sonnet-5-5`, in a fresh context, plus a code check | A different model and a different context from the Writer. Sees only the claim and its passage, never the Writer's reasoning | The code check (below) |
-| Examiner | Score the draft against the [rubric](../QUALITY_RUBRIC.md) | `claude-sonnet-5-5`, in a fresh context | Same independence reason. Scoring is cheaper than writing | Blind human review during evaluation |
+| Triage | Score exam relevance, tag a syllabus topic, link past questions | A small free model | Many short items, a simple judgement. Titles only, so the token use is tiny | A labelled sample, measured against the back-test |
+| Researcher | Gather the evidence pack for each chosen issue | A mid-size free model, as a bounded agent loop | Needs to pick tools and read long documents, but not to write well | Writer and Fact-checker both |
+| Writer | Write the claims, then the three reading depths, the Mains question and the recall questions | The best free model that wins the bake-off | The writing is the product, so this gets the strongest free model we can find | Fact-checker, Examiner |
+| Fact-checker | Check every claim against the passage it cites | A free model from a different provider than the Writer, in a fresh context, plus a code check | A different model and a different context from the Writer. Sees only the claim and its passage, never the Writer's reasoning | The code check (below) |
+| Examiner | Score the draft against the [rubric](../QUALITY_RUBRIC.md) | A free model from a different provider than the Writer, in a fresh context | Same independence reason | Blind human review during evaluation |
 | Publish gate | Decide: publish, revise or hold | None (plain code) | A rule, not a judgement | Unit tests |
 
 ### Two checks that do not rely on a model
@@ -58,7 +58,7 @@ A draft goes live only if all of these hold:
 | Fact-checker marks no claim as unsupported or contradicted | Model |
 | Rubric total is at least 70, and Accuracy is above 2 | [Rubric](../QUALITY_RUBRIC.md) |
 | Topic is not on the sensitive list | Config file |
-| Cost of this piece is under the cap | Cost counter |
+| The day's quota still has room for the checks | Quota counter |
 | Kill switch is off | Config flag |
 
 Otherwise: if the fault is fixable and this is the first or second attempt, the draft returns to the Writer with the failure list. After two failed attempts it is held and the maintainer is alerted. A held piece is never published and never silently dropped.
@@ -73,7 +73,7 @@ Otherwise: if the fault is fixable and this is the first or second attempt, the 
 | 4 | The Writer produces 14 claims, each with an exact quote and a source, then the three depths and the questions |
 | 5 | The code checks run. One quote is not found in its passage. The draft fails and returns to the Writer with that failure |
 | 6 | The revised draft passes the code checks. The Fact-checker finds no unsupported claims. The Examiner scores 78 with Accuracy 4 |
-| 7 | The gate passes. The editorial publishes. Cost: about $1.80, since the Writer, Fact-checker and Examiner ran twice |
+| 7 | The gate passes. The editorial publishes. It used 11 model calls from the day's free quota, since the Writer, Fact-checker and Examiner ran twice |
 | 8 | A daily job picks 3 published pieces at random and runs the claim audit on them |
 
 ## Choices considered
@@ -85,7 +85,7 @@ Otherwise: if the fault is fixable and this is the first or second attempt, the 
 | A. Fixed stages in code, one bounded agent for research | Described above | Predictable cost and behaviour. Each stage can be tested and swapped alone. Failures are located | More code than a single prompt. Stage hand-offs must be defined | **Chosen** |
 | B. One free-roaming agent with all the tools | A single model decides what to do next, end to end | Least code. Flexible | Cost and path vary run to run. A failure is hard to locate. The model grades its own work. No clean place for the gate | Ruled out |
 | C. One large prompt | All sources in, editorial out | Simplest. Cheapest to build | Cannot check itself. A claim cannot be tied to a quote. Context bloats on heavy days | Ruled out |
-| D. Anthropic-hosted agent service (Managed Agents) | Anthropic runs the loop and a sandbox | No loop code to write | We need our own cost cap, database, gate and retry rules in the loop. Less control for a small gain | Ruled out for now |
+| D. Anthropic-hosted agent service (Managed Agents) | Anthropic runs the loop and a sandbox | No loop code to write | It is paid, and we need our own quota counter, database, gate and retry rules in the loop. Less control for a small gain | Ruled out for now |
 
 ### Who checks the Writer
 
@@ -102,23 +102,42 @@ Otherwise: if the fault is fixable and this is the first or second attempt, the 
 | Free text, parsed afterwards | Easy to prompt | Parsing breaks. A claim and its quote can drift apart | Ruled out |
 | Structured output with a fixed schema (claims, quotes, depths, questions) | The quote check can run on the data. Depths are built from the same claims, so figures cannot differ between them | Schema must be designed | **Chosen** |
 
-## Cost per editorial
+### Where the models come from
 
-These are estimates. Prices are per million tokens: Haiku 5.5 $0.10 in, $0.50 out; Sonnet 5.5 $2 in, $10 out; Opus 5.5 $4 in, $20 out.
+| Option | For | Against | Verdict |
+|---|---|---|---|
+| A. Free tiers of several providers behind one small router, with a client-side quota counter | Costs nothing. If one provider is slow or out of quota, the next takes over. Works for an open-source project with no budget | Free tiers change without notice. Quality of free models is unproven for this task. More code | **Chosen** |
+| B. One paid provider | Best quality and simplest | Costs money. Ruled out by decision: free models only, no exceptions | Ruled out |
+| C. Local open models on a home machine | No limits, no third party | Needs hardware, and the strongest open models do not fit. A scheduled run needs the machine on | Possible later, as one more provider in the router |
+| D. One free provider only | Simplest | One outage or one quota cut stops the pipeline | Ruled out |
 
-| Stage | Assumed tokens (in / out) | Cost |
+**How "free only" is enforced**
+
+| Rule | Where |
+|---|---|
+| Only providers with a free tier are configured: Gemini (AI Studio), Groq, OpenRouter, and others added later | `config/models.json` |
+| An OpenRouter model must end in `:free`, or the router refuses to call it | Code |
+| Billing is never turned on at any provider. A free key that hits its quota returns an error, not a charge | Policy, written here |
+| A client-side counter stops calls well before each provider's published limit | Code |
+| A provider that returns 401 or 403 is skipped and reported loudly, not retried | Code |
+
+## Quotas, not cost
+
+There is no money cost. The limit is how many calls and tokens the free tiers allow each day. These are estimates, and the published limits change, so the router reads them from config.
+
+| Stage | Calls per issue | Tokens per issue (in / out) |
 |---|---|---|
-| Triage (share of one issue) | 12k / 1k, batch half price | about $0.00 |
-| Researcher | 80k / 4k, including several reads | $0.20 |
-| Writer, first pass | 40k / 25k, including thinking | $0.66 |
-| Fact-checker | 30k / 4k | $0.10 |
-| Examiner | 15k / 2k | $0.05 |
-| **Happy path** | | **about $1.00** |
-| With two revisions | Writer, Fact-checker and Examiner run three times | about $3.00 |
+| Triage (share of one issue) | under 1 | about 3k / 0.3k |
+| Researcher | 6 to 10 | 80k / 4k |
+| Writer | 1, up to 3 with revisions | 40k / 25k each |
+| Fact-checker | 1, up to 3 | 30k / 4k each |
+| Examiner | 1, up to 3 | 15k / 2k each |
+| **Clean run** | **about 10 calls** | **about 170k / 35k** |
+| **With two revisions** | **about 20 calls** | **about 380k / 90k** |
 
-At 8 issues a day: roughly $8 a day on a clean run, up to about $24 on a bad day, so $240 to $720 a month. Caching the shared prompt and evidence pack, and setting effort lower on the Researcher, Fact-checker and Examiner, should cut this. Measure first.
+At 3 issues a day, that is 30 to 60 calls and about 0.5 to 1.4 million tokens. One free tier cannot carry that, so the router spreads stages across providers. If quota runs out, the rest of the issues wait for the next day. They are never rushed through with a cheaper check.
 
-**Cost limits in code:** a per-piece cap (default $4) and a per-day cap (default $40). When a cap is hit, the piece is held, not cut short. The cost counter reads the `usage` field of every response.
+**Start small:** 3 issues a day. Raise it only when the measured use shows room.
 
 ## Rules that follow from the engineering checklist
 
@@ -130,7 +149,7 @@ At 8 issues a day: roughly $8 a day on a clean run, up to about $24 on a bad day
 | A run that does nothing is an error, not "done". A run with zero items from every source raises an alert | An outage must never look like a quiet news day |
 | Long reads and embeddings run off the main loop and in batches | Keeps the process responsive |
 | No forced tool choice. Output shape comes from structured outputs | Current models reject forced tool choice |
-| Count model calls per issue at normal load and when failing. Target at most 6 calls on the happy path and at most 14 with two revisions | Keeps the cost bound visible |
+| Count model calls per issue at normal load and when failing. Target about 10 calls on the happy path and about 20 with two revisions | Keeps quota use visible |
 
 ## What can go wrong
 
@@ -142,14 +161,14 @@ At 8 issues a day: roughly $8 a day on a clean run, up to about $24 on a bad day
 | The Researcher loops or wanders | Hard limit on steps and on tokens per issue. It returns what it has, marked incomplete, and the gate holds the piece |
 | A source returns 403 or changes layout | The source run is marked failed and an alert is sent. Other sources continue |
 | One bad item breaks the run | Each issue runs on its own. One failure holds one issue, not the day |
-| Prices or models change | Model names and caps are in one config file. The benchmark can be re-run on a new model before switching |
-| Cost spikes | Per-piece and per-day caps, and the kill switch |
+| Models or limits change | Model names and caps are in one config file. The bake-off can be re-run on a new model before switching |
+| A free tier shrinks or closes | The router has several providers. A quota counter shows the shortfall early. Publish fewer issues rather than spend money |
 
 ## What is still open
 
 | Question | Notes |
 |---|---|
-| Is Opus the right Writer, or does Sonnet match it on the benchmark? | Test both on three benchmark topics before D4.5 is locked. If Sonnet matches, cost drops by about half |
+| Which free model writes best? | Bake-off on three benchmark topics, scored on the rubric. Candidates come from the providers' own model lists |
 | Which embedding model, and what size? | Needed by the [storage design](../knowledge-base/STORAGE_AND_RETRIEVAL.md) |
 | What goes on the sensitive-topic list? | Needed for the gate. Start with courts, communal issues, elections, religion |
 | How long can a run take? | The scheduler's time limit decides how many issues run in parallel |
