@@ -4,7 +4,7 @@ import time
 import urllib.error
 import urllib.request
 
-USER_AGENT = "Mozilla/5.0 (compatible; SteelframeBot/0.1; +https://github.com/Manas-Trivedi/steelframe)"
+USER_AGENT = "steelframe-scout/0.1 (+https://github.com/Manas-Trivedi/steelframe)"
 MAX_BYTES = 10 * 1024 * 1024
 RETRY_STATUS = {429} | set(range(500, 600))
 
