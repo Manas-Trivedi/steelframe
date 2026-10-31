@@ -202,3 +202,22 @@ class QuotaTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProbeTests(unittest.TestCase):
+    def test_probe_reports_ok_and_each_kind_of_failure(self):
+        import io as _io
+        from steelframe.llm.probe import probe
+        from steelframe.llm.providers import Result
+
+        class P:
+            def complete(self, model, *a):
+                if model == "good":
+                    return Result("{}", 3, 2, "p", model)
+                raise {"busy": RateLimited("429 busy"), "paid": Rejected("400 paid only")}[model]
+
+        out = _io.StringIO()
+        rows = probe({"p": P()}, {"p": ["good", "busy", "paid"]}, sleep=lambda s: None, out=out)
+        self.assertTrue(rows[0][1].startswith("OK"))
+        self.assertIn("RateLimited", rows[1][1])
+        self.assertIn("Rejected", rows[2][1])

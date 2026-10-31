@@ -1,13 +1,35 @@
 {
   "providers": {
-    "gemini": {"kind": "gemini", "base_url": "https://generativelanguage.googleapis.com/v1beta", "key_env": "GEMINI_API_KEY"},
-    "groq": {"kind": "openai", "base_url": "https://api.groq.com/openai/v1", "key_env": "GROQ_API_KEY"},
-    "openrouter": {"kind": "openai", "base_url": "https://openrouter.ai/api/v1", "key_env": "OPENROUTER_API_KEY"}
+    "gemini": {
+      "kind": "gemini",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta",
+      "key_env": "GEMINI_API_KEY"
+    },
+    "groq": {
+      "kind": "openai",
+      "base_url": "https://api.groq.com/openai/v1",
+      "key_env": "GROQ_API_KEY"
+    },
+    "openrouter": {
+      "kind": "openai",
+      "base_url": "https://openrouter.ai/api/v1",
+      "key_env": "OPENROUTER_API_KEY"
+    }
   },
   "limits": {
-    "gemini": {"rpm": 4, "rpd": 80},
-    "groq": {"rpm": 24, "rpd": 800, "tpd": 160000},
-    "openrouter": {"rpm": 16, "rpd": 40}
+    "gemini": {
+      "rpm": 4,
+      "rpd": 80
+    },
+    "groq": {
+      "rpm": 24,
+      "rpd": 800,
+      "tpd": 160000
+    },
+    "openrouter": {
+      "rpm": 16,
+      "rpd": 40
+    }
   },
   "routes": {
     "triage": [],
@@ -15,5 +37,31 @@
     "writer": [],
     "fact_checker": [],
     "examiner": []
+  },
+  "candidates": {
+    "gemini": [
+      "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-2.5-pro",
+      "gemini-3-flash-preview",
+      "gemini-3.1-flash-lite",
+      "gemini-3.5-flash",
+      "gemini-3.8-flash",
+      "gemini-flash-latest",
+      "gemini-pro-latest",
+      "gemma-4-31b-it"
+    ],
+    "groq": [
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b",
+      "qwen/qwen3.8-27b"
+    ],
+    "openrouter": [
+      "google/gemma-4-31b-it:free",
+      "google/gemma-4-26b-a4b-it:free",
+      "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "nvidia/nemotron-3.5-lightning:free",
+      "thinkingmachines/inkling:free"
+    ]
   }
 }
