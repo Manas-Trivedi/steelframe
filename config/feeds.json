@@ -1,0 +1,30 @@
+[
+  {
+    "id": "PIB",
+    "name": "Press Information Bureau, all releases",
+    "url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3",
+    "format": "rss",
+    "tier": "primary"
+  },
+  {
+    "id": "RBI",
+    "name": "Reserve Bank of India, press releases",
+    "url": "https://www.rbi.org.in/pressreleases_rss.xml",
+    "format": "rss",
+    "tier": "primary"
+  },
+  {
+    "id": "HINDU",
+    "name": "The Hindu, national news",
+    "url": "https://www.thehindu.com/news/national/feeder/default.rss",
+    "format": "rss",
+    "tier": "secondary"
+  },
+  {
+    "id": "INDIANEXPRESS",
+    "name": "The Indian Express, India section",
+    "url": "https://indianexpress.com/section/india/feed/",
+    "format": "rss",
+    "tier": "secondary"
+  }
+]
