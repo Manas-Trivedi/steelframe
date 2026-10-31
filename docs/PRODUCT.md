@@ -4,7 +4,7 @@ Status: draft 0.1. Decisions here are settled for the first version. Open questi
 
 ## In one paragraph
 
-Steelframe is a free, open-source website that gives people preparing for the UPSC Civil Services Examination a daily set of current affairs editorials. Each editorial explains one issue, ties it to the exam syllabus, shows where every claim comes from, and ends with a few questions to help the reader remember it. It is written by an automated pipeline, checked by a second automated pass, and approved by a human editor before it is published.
+Steelframe is a free, open-source website that gives people preparing for the UPSC Civil Services Examination a daily set of current affairs editorials. Each editorial explains one issue, ties it to the exam syllabus, shows where every claim comes from, and ends with a few questions to help the reader remember it. It is written by an automated pipeline, checked by a second automated pass, and published automatically only if it passes a set of fixed checks.
 
 ## Terms used here
 
@@ -23,7 +23,7 @@ Steelframe is a free, open-source website that gives people preparing for the UP
 | Syllabus | The official list of topics the exam can cover |
 | PYQ | Previous year question |
 | Pipeline | The chain of automated steps that produces an editorial |
-| Human editor | A person who reads and approves an editorial before it is published |
+| Publish gate | The fixed checks a draft must pass before it goes live: claims verified, rubric score at least 70, no accuracy failure, topic not on the sensitive list |
 
 ## The problem
 
@@ -92,11 +92,10 @@ The example is illustrative. The issue, numbers and steps are made up to show th
 | 4. Write | A draft editorial is produced: what changed, the background, the main arguments for and against, a view on whether it will work, the way forward, and a Mains angle. It also produces three recall questions. |
 | 5. Check claims | A second, separate pass checks every claim in the draft against its source. Say it finds that one figure in the draft does not match the document. It sends the draft back with that note. |
 | 6. Score | The corrected draft is scored against the [quality rubric](QUALITY_RUBRIC.md). Say it scores 78. It passes the minimum of 70 and has no accuracy failure. |
-| 7. Human approval | A human editor reads the editorial, looks at any flagged claims, and approves it. |
-| 8. Publish | The editorial appears on the Today page in three depths. Every claim links to its source. |
-| 9. Read | In the evening, an aspirant opens it. They read the brief, then the editorial. They tap a figure and see the passage. They highlight a paragraph and answer the three questions. One answer is wrong, so that question returns in the revision queue in a few days. |
+| 7. Publish | The draft passes the publish gate and the editorial appears on the Today page in three depths. Every claim links to its source. |
+| 8. Read | In the evening, an aspirant opens it. They read the brief, then the editorial. They tap a figure and see the passage. They highlight a paragraph and answer the three questions. One answer is wrong, so that question returns in the revision queue in a few days. |
 
-If step 5 or step 6 fails twice, the draft is not published that day. A human decides what to do.
+If step 5 or step 6 fails twice, the draft is held and the maintainer is alerted. Nothing unchecked goes live.
 
 ## Principles that shape the first version
 
@@ -105,7 +104,7 @@ If step 5 or step 6 fails twice, the draft is not published that day. A human de
 | Evaluation before features | The app is not built until the writing beats a defined benchmark in blind review |
 | Every claim has a source | A claim that cannot be traced does not ship |
 | Exam-shaped, not news-shaped | Content is chosen and framed by the syllabus and past papers |
-| Humans stay accountable | A human editor approves every piece until error rates justify less review |
+| Checked by machines, audited by people | No human approves each piece. A fixed publish gate decides, and a daily sample of published pieces is audited. A high error rate pauses publishing |
 | Respect the sources | We link to and summarise sources within their terms, with no wholesale copying |
 | Open | The code and the rubric are public under the Apache License 2.0 |
 
@@ -136,7 +135,7 @@ Design rules:
 | Reading depth | Three layers built from one set of sourced claims | **One fixed length:** forces every reader into the same time budget. **Separate pieces per length:** the figures could drift apart. |
 | Where saved items live | In a reader account | **Browser storage only:** notes vanish when data is cleared. **No saving:** fails the use case, since saving and highlighting matter to aspirants. |
 | What the syllabus map shows | What has been in the news, by topic | **A "percent of syllabus covered" tracker:** misleading, since current affairs has no finish line. **No map:** loses the one view that shows how issues connect. |
-| Who approves publication | A human editor, every piece | **Fully automatic:** too risky until error rates are measured. |
+| Who approves publication | An automatic publish gate, plus a daily sampled audit after publishing | **A human editor for every piece:** safest, but slow, and it caps how many editorials a day. This is a proof of concept built to production standard, so the gate and the audit carry the safety instead. **Fully automatic with no audit:** errors would go unmeasured. |
 
 ## What can go wrong
 
@@ -148,17 +147,17 @@ Design rules:
 | The pipeline or a source is down | No edition for the day | Say so openly. Do not publish a partial or unchecked edition. A failed run is retried, and an outage is never reported as "done" |
 | Quality drifts as models or sources change | Scores fall slowly | The examiner scores every piece, and the benchmark is re-run on a schedule |
 | Reviewers disagree | Rubric scores are noisy | Measure agreement per dimension, and revise unclear score descriptions before relying on them |
-| The human editor becomes the bottleneck | Fewer editorials per day than planned | Publish fewer, better pieces, and measure review time per piece |
+| The publish gate lets an error through | A wrong claim goes live with no person having read it | Audit a daily random sample of published pieces. If the error rate passes the limit, pause publishing. Correct visibly, with the date and a note |
 | Aspirants do not switch | Low return visits in the closed beta | Treat retention as the main test of the first release, and learn why before adding features |
 | Cost per editorial runs away | A heavy day multiplies calls | Set a cost limit per piece, count calls per item at normal load and during failures, and avoid retrying errors that cannot succeed |
-| A sensitive topic is handled badly | A politically charged story is framed one-sidedly | Show competing views as views, with their sources, and have the editor check it |
+| A sensitive topic is handled badly | A politically charged story is framed one-sidedly | Show competing views as views, with their sources, and hold sensitive topics for the maintainer instead of publishing them automatically |
 
 ## What is still open
 
 | Question | Notes |
 |---|---|
 | What may we reuse from each government and court source? | To be answered source by source in the knowledge base phase |
-| Who is the human editor, and how many hours does review need per day? | Affects how many editorials per day the first version can carry |
+| What goes on the sensitive-topic list, and what is the error rate that pauses publishing? | To be set from the first audits |
 | What is the target cost per editorial? | To be set after the first pipeline run |
 | How is the project sustained, given it is free and open source? | Not decided. Pricing stays out of the first version |
 | How are corrections shown to readers? | The need is settled. The design is not |
