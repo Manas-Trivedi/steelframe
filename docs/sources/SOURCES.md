@@ -61,6 +61,7 @@ Say the Finance Ministry issues a press release on a new rule, and the Gazette c
 | Risk | Response |
 |---|---|
 | A source's terms are not what we read | Each row records when and how we checked it. Re-check on a schedule, and take content down on request |
+| PIB refuses some bot names | Tested 31 Oct 2026: PIB returns 403 for `SteelframeBot/0.1` and for any name with a "(+https://...)" part. It returns 200 for the plain name `steelframe-scout/0.1`. We use the plain name, which is honest and does not pretend to be a browser. The project address is given in the repository, not in the request |
 | Government sites block our fetcher | Seen on 31 Oct 2026: several returned "403 Forbidden" to an automated fetch. Use polite, slow fetching, official feeds where they exist, and alert when a source fails. A source that fails must never be reported as "no news today" |
 | RBI objects to links or copies | We link to the page and keep no copy, and we ask RBI for written permission |
 | Newspaper terms forbid automated reading | The Indian Express forbids it outright, so newspapers are left out of the first version. Re-open only with written consent |
