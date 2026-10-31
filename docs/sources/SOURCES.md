@@ -76,6 +76,22 @@ Say the Finance Ministry issues a press release on a new rule, and the Gazette c
 | eGazette, Parliament | No reuse policy found | Ask, or confirm by reading the site footers |
 | The Hindu, The Indian Express | Not read | Read both terms pages before any use beyond links |
 
+## Can the pipeline reach each source?
+
+Tested on 31 October 2026 from one home network, with a plain script that names itself in its user agent.
+
+| Source | Result | Meaning |
+|---|---|---|
+| RBI press release feed | Works | 10 items |
+| The Hindu national feed | Works | 60 items, headlines and links only |
+| The Indian Express India feed | Works | 200 items, headlines and links only |
+| PIB release feed | **Blocked** | First attempt timed out. Second returned 403 Forbidden |
+| data.gov.in, India Code | **Blocked** | 403 Forbidden |
+| NCERT, Parliament e-library, Supreme Court main site | Timed out | Not tried again |
+| PRS, eGazette home page | Works | No feed. Pages must be read |
+
+PIB is the most important primary source, so a blocked PIB is the main risk for the Scout stage. The fix is to be settled before Scout can rely on it: see the open questions below.
+
 ## What is still open
 
 | Question | Notes |
@@ -85,4 +101,5 @@ Say the Finance Ministry issues a press release on a new rule, and the Gazette c
 | Will RBI allow links and short quotes? | Ask in writing |
 | Can we read newspaper pages automatically? | Read both sets of terms first |
 | Does a dated passage copy count as "caching" for sources that forbid it? | Treated as yes for RBI. Confirm for others |
-| Which official feeds and APIs exist for each source? | The next step, before the Scout stage is designed |
+| Which official feeds and APIs exist for each source? | Feeds found for PIB, RBI and both papers. None found for PRS or eGazette |
+| How do we read PIB if it keeps blocking scripts? | Options: run the fetch from a network PIB accepts, ask PIB for access, or find an official mirror. Not decided |
