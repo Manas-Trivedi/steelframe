@@ -123,7 +123,7 @@ Scores of 2 and 4 sit between the descriptions shown.
 |---|---|
 | **Accuracy gate:** any piece scoring 2 or below on Accuracy fails, whatever its total | One wrong fact costs more trust than a dull paragraph |
 | **Minimum total:** 70 out of 100 | A piece below this is not ready to publish |
-| **Human sign-off:** a human editor approves every piece until measured error rates justify less review | Matches the launch plan |
+| **Automatic publish:** a piece that meets both rules above is published without human review. A daily sample is audited afterwards | The rubric is the gate, so it has to be strict |
 
 ## The "better than" test
 
