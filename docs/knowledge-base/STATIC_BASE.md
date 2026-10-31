@@ -40,7 +40,7 @@ For each of the 65 syllabus topics in [gs_topics.yaml](../../data/syllabus/gs_to
 |---|---|
 | Topic id | `G2.GOV` |
 | Concept note | Our own 100-word explainer, with its references |
-| References | Constitution article or Act section (link to India Code), NCERT chapter (class, book, chapter, link to ncert.nic.in) |
+| References | Constitution article or Act section (link to India Code), NCERT chapter (class, book and chapter title, written out in plain text) |
 | Linked past questions | From the [tag files](../../data/past_papers/tags/), via `tools/past_papers/questions_for_topic.py` |
 
 The Writer reads the concept note and references for the topic and uses them to write the background. The reader sees the references as "read more" links beside the claim.
@@ -54,7 +54,7 @@ A ministry publishes a draft rule that gives village councils more power over lo
 | 1 | Triage tags the item to a syllabus topic, say governance and accountability |
 | 2 | The concept index returns the topic's concept note, the Constitution article that creates village councils, and the NCERT chapter on local government |
 | 3 | The Writer writes the background paragraph from the concept note, in its own words |
-| 4 | Each background claim carries a reference. The reader taps it and goes to the article on India Code, or the NCERT chapter on ncert.nic.in |
+| 4 | Each background claim carries a reference. The reader taps it and goes to the article on India Code. For NCERT they see the class, book and chapter title, with no link until NCERT agrees in writing |
 | 5 | The Fact-checker confirms each background claim against the cited Act or article. For NCERT references it confirms the chapter covers the claim, using the model's own reading of the chapter fetched at check time and not stored |
 
 ## Choices considered
@@ -72,7 +72,7 @@ A ministry publishes a draft rule that gives village councils more power over lo
 | Risk | Response |
 |---|---|
 | A concept note is wrong | Every note cites a reference. The Fact-checker checks notes the same way as any claim. A daily sample of published pieces is audited |
-| NCERT objects to links | Ask in writing. If refused, link to the book's landing page and name the chapter in plain text |
+| NCERT does not allow links | Reports say links need NCERT's prior written permission. Until granted, name the chapter in plain text and add no link. Ask in writing |
 | NCERT changes or reorders chapters, or issues a new edition | Store class, book, title and chapter title, not just a URL. Re-check links monthly |
 | A note drifts close to NCERT's wording | Write notes from the Constitution and Acts first. Run a similarity check against the chapter text at write time, not stored |
 | Syllabus topics are too coarse to find the right chapter | Several references per topic. Revisit subtopics if the back-test shows poor matches |
@@ -81,7 +81,7 @@ A ministry publishes a draft rule that gives village councils more power over lo
 
 | Question | Notes |
 |---|---|
-| What does NCERT's own copyright notice say, and do links need written permission? | Read the notice on ncert.nic.in and ask NCERT |
+| What does NCERT's own copyright notice say? | We only have a search engine's summary, which says linking needs prior written permission. Find the notice, or email secy.ncert@nic.in, and ask for permission to link |
 | Is it fine to read an NCERT chapter during checking, if we never store it? | Downloading for reference is allowed, but a machine reading it is a grey area. Ask NCERT together with the link question |
 | Which NCERT books and chapters do we index first? | Start with the topics that past questions touch most. See the topic counts in [PAST_PAPER_TAGGING.md](../evals/PAST_PAPER_TAGGING.md) |
 | Who writes the first 65 concept notes? | The pipeline can draft them. Each is audited with the [accuracy audit](../evals/ACCURACY_AUDIT.md) before use |

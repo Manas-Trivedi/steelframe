@@ -44,8 +44,8 @@ The planned pipeline is a fixed sequence of specialised stages. The exact design
 ```
  Sources           Scout        Triage        Researcher      Writer
  PIB, PRS,   -->   ingest  -->  exam     -->  primary    -->  editorial,
- RBI, courts,      and          relevance,    documents,      Mains question,
- newspapers        dedupe       syllabus      history,        Prelims MCQs
+ RBI, Parliament,  and          relevance,    documents,      Mains question,
+ courts, data      dedupe       syllabus      history,        Prelims MCQs
                                 links         data
                                                                   |
                          Published  <--  Examiner  <--  Fact-checker

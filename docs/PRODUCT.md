@@ -86,7 +86,7 @@ The example is illustrative. The issue, numbers and steps are made up to show th
 
 | Step | What happens |
 |---|---|
-| 1. Collect | In the morning, the system gathers new items from official sources and news outlets: ministry releases, committee reports, court orders, newspapers. It removes duplicates. |
+| 1. Collect | In the morning, the system gathers new items from official sources and news outlets: ministry releases, committee reports, court orders. It removes duplicates. |
 | 2. Choose | Each item is scored for exam relevance and linked to a syllabus topic and past questions. Say a ministry has published a draft rule. It scores high. A routine appointment scores low and is dropped. |
 | 3. Research | For the draft rule, the system fetches the draft itself, the law it comes under, and earlier background. These are the primary sources. |
 | 4. Write | A draft editorial is produced: what changed, the background, the main arguments for and against, a view on whether it will work, the way forward, and a Mains angle. It also produces three recall questions. |
@@ -131,7 +131,7 @@ Design rules:
 | Decision | Chosen | Other options, and why not |
 |---|---|---|
 | How wide is the first version? | Daily GS editorials only | **Add Mains answer feedback:** valuable, but poor feedback would damage trust, so it waits for its own evaluation. **Add test series and courses:** a different product, with a different cost. |
-| What do we write from? | Primary documents first, with newspapers used to find stories and shown as labelled opinion | **One newspaper editorial as the base:** inherits one writer's framing and errors, and its facts are second-hand. **Aggregating news items:** shallow, and repeats whatever the outlets got wrong. |
+| What do we write from? | Primary documents only in the first version. Newspapers are left out because their terms forbid automated use (see [sources](sources/SOURCES.md)). They can return later with written consent | **One newspaper editorial as the base:** inherits one writer's framing and errors, and its facts are second-hand. **Aggregating news items:** shallow, and repeats whatever the outlets got wrong. |
 | Reading depth | Three layers built from one set of sourced claims | **One fixed length:** forces every reader into the same time budget. **Separate pieces per length:** the figures could drift apart. |
 | Where saved items live | In a reader account | **Browser storage only:** notes vanish when data is cleared. **No saving:** fails the use case, since saving and highlighting matter to aspirants. |
 | What the syllabus map shows | What has been in the news, by topic | **A "percent of syllabus covered" tracker:** misleading, since current affairs has no finish line. **No map:** loses the one view that shows how issues connect. |
