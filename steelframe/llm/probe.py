@@ -10,6 +10,7 @@ import json
 import sys
 import time
 
+from ..env import load_env
 from .errors import LLMError
 from .providers import build_providers
 
@@ -40,6 +41,7 @@ def probe(providers, candidates, sleep=time.sleep, out=sys.stdout):
 
 
 def main(argv=None):
+    load_env()
     config = json.load(open("config/models.json"))
     chosen = (argv if argv is not None else sys.argv[1:]) or list(config["candidates"])
     candidates = {n: config["candidates"][n] for n in chosen}

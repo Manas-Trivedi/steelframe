@@ -8,11 +8,13 @@ own pricing page before adding it to a route: only OpenRouter shows it in the na
 import json
 import sys
 
+from ..env import load_env
 from .errors import LLMError
 from .providers import build_providers
 
 
 def main(argv=None):
+    load_env()
     names = (argv if argv is not None else sys.argv[1:])
     providers = build_providers(json.load(open("config/models.json")))
     status = 0

@@ -236,3 +236,25 @@ class ProbeTests(unittest.TestCase):
         self.assertTrue(rows[0][1].startswith("OK"))
         self.assertIn("RateLimited", rows[1][1])
         self.assertIn("Rejected", rows[2][1])
+
+
+class EnvTests(unittest.TestCase):
+    def test_load_env_parses_and_never_overrides_the_shell(self):
+        import tempfile
+        from steelframe.env import load_env
+        with tempfile.NamedTemporaryFile("w", suffix=".env", delete=False) as f:
+            f.write('# comment\n\nA_KEY=one\nexport B_KEY="two words"\nC_KEY=\'three\'\nbroken line\nSHELL_KEY=from_file\n')
+        with mock.patch.dict(os.environ, {"SHELL_KEY": "from_shell"}, clear=False):
+            for name in ("A_KEY", "B_KEY", "C_KEY"):
+                os.environ.pop(name, None)
+            loaded = load_env(f.name)
+            self.assertEqual(sorted(loaded), ["A_KEY", "B_KEY", "C_KEY"])
+            self.assertEqual((os.environ["A_KEY"], os.environ["B_KEY"], os.environ["C_KEY"]), ("one", "two words", "three"))
+            self.assertEqual(os.environ["SHELL_KEY"], "from_shell")
+            for name in ("A_KEY", "B_KEY", "C_KEY"):
+                os.environ.pop(name, None)
+        os.unlink(f.name)
+
+    def test_missing_file_is_fine(self):
+        from steelframe.env import load_env
+        self.assertEqual(load_env("/nonexistent/.env"), [])
