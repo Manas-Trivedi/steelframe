@@ -34,7 +34,7 @@ Most current affairs products fall into two groups. News scrapers collect headli
 | **Evaluation before features** | We do not build the app until the writing beats a defined benchmark, judged blind by serious aspirants and teachers against the [quality rubric](docs/QUALITY_RUBRIC.md). |
 | **Every claim has a source** | A claim that cannot be traced to a primary document does not ship. |
 | **Exam-shaped, not news-shaped** | Content is selected and framed by the syllabus and past papers, not by what trended. |
-| **Humans stay accountable** | A human editor signs off on output until measured error rates justify less review. |
+| **Checked by machines, audited by people** | A fixed publish gate decides what goes live. A daily sample of published pieces is audited, and a high error rate pauses publishing. |
 | **Respect the sources** | We link to and summarise sources within what their terms allow. No wholesale copying. |
 
 ## How it works
