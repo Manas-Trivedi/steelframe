@@ -1,0 +1,19 @@
+{
+  "providers": {
+    "gemini": {"kind": "gemini", "base_url": "https://generativelanguage.googleapis.com/v1beta", "key_env": "GEMINI_API_KEY"},
+    "groq": {"kind": "openai", "base_url": "https://api.groq.com/openai/v1", "key_env": "GROQ_API_KEY"},
+    "openrouter": {"kind": "openai", "base_url": "https://openrouter.ai/api/v1", "key_env": "OPENROUTER_API_KEY"}
+  },
+  "limits": {
+    "gemini": {"rpm": 4, "rpd": 80},
+    "groq": {"rpm": 24, "rpd": 800, "tpd": 160000},
+    "openrouter": {"rpm": 16, "rpd": 40}
+  },
+  "routes": {
+    "triage": [],
+    "researcher": [],
+    "writer": [],
+    "fact_checker": [],
+    "examiner": []
+  }
+}
