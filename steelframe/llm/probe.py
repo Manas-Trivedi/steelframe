@@ -13,6 +13,7 @@ import time
 from .errors import LLMError
 from .providers import build_providers
 
+MAX_TOKENS = 512  # reasoning models spend tokens thinking before they answer; 64 is too few
 SYSTEM = "Reply with JSON only."
 USER = 'Return exactly this JSON: {"ok": true}'
 
@@ -23,8 +24,13 @@ def probe(providers, candidates, sleep=time.sleep, out=sys.stdout):
         for model in models:
             started = time.time()
             try:
-                result = providers[name].complete(model, SYSTEM, USER, True, 64)
-                outcome = f"OK  {time.time() - started:4.1f}s  {result.tokens_in}+{result.tokens_out} tokens"
+                result = providers[name].complete(model, SYSTEM, USER, True, MAX_TOKENS)
+                try:
+                    json.loads(result.text)
+                    verdict = "OK"
+                except ValueError:
+                    verdict = "answered, but not valid JSON"
+                outcome = f"{verdict}  {time.time() - started:4.1f}s  {result.tokens_in}+{result.tokens_out} tokens"
             except LLMError as error:
                 outcome = f"{type(error).__name__}: {str(error)[:110]}"
             rows.append((f"{name}/{model}", outcome))

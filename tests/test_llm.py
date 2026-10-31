@@ -142,6 +142,21 @@ class RouterTests(unittest.TestCase):
         self.make([a, b]).complete_json("triage", "s", "u")
         self.assertEqual(a.calls, 1)
 
+    def test_403_on_one_model_closes_only_that_route(self):
+        class Two(Stub):
+            def complete(self, model, *args):
+                self.calls += 1
+                if model == "bad":
+                    raise AuthError("403 needs agent harness", 403)
+                return ok(self.name)
+        two = Two("a")
+        router = Router({"a": two}, {"s": [("a", "bad"), ("a", "good")]},
+                        Quota(":memory:", {}), sleep=lambda s: None)
+        _, result = router.complete_json("s", "s", "u")
+        router.complete_json("s", "s", "u")
+        self.assertEqual(result.model, "m")
+        self.assertEqual(two.calls, 3)  # "bad" asked once, "good" asked twice
+
     def test_auth_error_disables_provider_for_the_process(self):
         a, b = Stub("a", AuthError("401")), Stub("b", ok("b"), ok("b"))
         router = self.make([a, b])

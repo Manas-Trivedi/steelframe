@@ -16,7 +16,8 @@ class Router:
         self.providers, self.routes, self.quota = providers, routes, quota
         self.sleep, self.clock = sleep, clock
         self.cooldown = {}  # provider -> time before which it is skipped
-        self.disabled = {}  # provider -> reason (auth problems), skipped for this process
+        self.disabled = {}  # provider -> reason (bad or missing key), skipped for this process
+        self.closed_routes = {}  # (provider, model) -> reason (403 on one model), skipped for this process
         for stage, route in routes.items():
             for provider, model in route:
                 providers[provider].check_free(model)  # refuse non-free models at start-up
@@ -31,6 +32,9 @@ class Router:
             label = f"{provider_name}/{model}"
             if provider_name in self.disabled:
                 reasons.append(f"{label}: skipped, {self.disabled[provider_name]}")
+                continue
+            if (provider_name, model) in self.closed_routes:
+                reasons.append(f"{label}: skipped, {self.closed_routes[(provider_name, model)]}")
                 continue
             if self.cooldown.get(provider_name, 0) > self.clock():
                 reasons.append(f"{label}: skipped, cooling down after a rate limit")
@@ -49,8 +53,12 @@ class Router:
                 self.cooldown[provider_name] = self.clock() + (error.retry_after or 60)
                 reasons.append(f"{label}: rate limited")
             except AuthError as error:
-                self.disabled[provider_name] = f"auth problem: {error}"
-                log.error("provider %s disabled: %s", provider_name, error)
+                if error.status == 403:
+                    self.closed_routes[(provider_name, model)] = f"forbidden for this model: {error}"
+                    log.error("route %s closed: %s", label, error)
+                else:
+                    self.disabled[provider_name] = f"auth problem: {error}"
+                    log.error("provider %s disabled: %s", provider_name, error)
                 reasons.append(f"{label}: auth problem")
             except Rejected as error:
                 reasons.append(f"{label}: rejected, {error}")

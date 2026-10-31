@@ -22,7 +22,7 @@ def request_json(url, *, headers, payload=None, timeout=60, opener=urllib.reques
         if error.code == 429:
             raise RateLimited(f"429 {detail}", _retry_after(error)) from error
         if error.code in (401, 403):
-            raise AuthError(f"{error.code} {detail}") from error
+            raise AuthError(f"{error.code} {detail}", error.code) from error
         if error.code >= 500:
             raise Unavailable(f"{error.code} {detail}") from error
         raise Rejected(f"{error.code} {detail}") from error

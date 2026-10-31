@@ -19,7 +19,15 @@ class Rejected(LLMError):
 
 
 class AuthError(Rejected):
-    """401, 403, or a missing key. Needs a human, so it is reported loudly."""
+    """401, 403, or a missing key. Needs a human, so it is reported loudly.
+
+    A missing key or a 401 means the whole provider is unusable. A 403 can be about one model
+    (OpenRouter says so for models that need an agent harness), so it only closes that route.
+    """
+
+    def __init__(self, message, status=None):
+        super().__init__(message)
+        self.status = status
 
 
 class NotFree(LLMError):
