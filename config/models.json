@@ -32,23 +32,80 @@
     }
   },
   "routes": {
-    "triage": [],
-    "researcher": [],
-    "writer": [],
-    "fact_checker": [],
-    "examiner": []
+    "triage": [
+      [
+        "groq",
+        "qwen/qwen3.8-27b"
+      ],
+      [
+        "groq",
+        "openai/gpt-oss-20b"
+      ],
+      [
+        "gemini",
+        "gemini-3-flash-preview"
+      ],
+      [
+        "openrouter",
+        "nvidia/nemotron-3.5-lightning:free"
+      ]
+    ],
+    "researcher": [
+      [
+        "groq",
+        "openai/gpt-oss-120b"
+      ],
+      [
+        "gemini",
+        "gemini-3-flash-preview"
+      ],
+      [
+        "openrouter",
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ]
+    ],
+    "writer": [
+      [
+        "gemini",
+        "gemini-3.5-flash"
+      ],
+      [
+        "gemini",
+        "gemini-3-flash-preview"
+      ],
+      [
+        "openrouter",
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ]
+    ],
+    "fact_checker": [
+      [
+        "groq",
+        "openai/gpt-oss-120b"
+      ],
+      [
+        "openrouter",
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ]
+    ],
+    "examiner": [
+      [
+        "groq",
+        "openai/gpt-oss-120b"
+      ],
+      [
+        "openrouter",
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ]
+    ]
   },
   "candidates": {
     "gemini": [
-      "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-2.5-pro",
       "gemini-3-flash-preview",
-      "gemini-3.1-flash-lite",
       "gemini-3.5-flash",
+      "gemini-3.1-flash-lite",
       "gemini-3.8-flash",
       "gemini-flash-latest",
-      "gemini-pro-latest",
       "gemma-4-31b-it"
     ],
     "groq": [
@@ -57,11 +114,10 @@
       "qwen/qwen3.8-27b"
     ],
     "openrouter": [
-      "google/gemma-4-31b-it:free",
-      "google/gemma-4-26b-a4b-it:free",
       "nvidia/nemotron-3-ultra-550b-a55b:free",
       "nvidia/nemotron-3.5-lightning:free",
-      "thinkingmachines/inkling:free"
+      "google/gemma-4-31b-it:free",
+      "google/gemma-4-26b-a4b-it:free"
     ]
   }
 }
