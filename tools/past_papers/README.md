@@ -8,6 +8,8 @@ The official PDFs are scanned images with no text layer, so the first step is OC
 |---|---|
 | `ocr_pdf.py` | Reads a PDF page by page and writes the text. Pages are read in two columns, left then right, which suits the Prelims layout |
 | `split_questions.py` | Finds the questions in the text, counts them against what each paper should have, and writes `data/past_papers/completeness.csv` |
+| `summarise_tags.py` | Checks every tag against the topic list and prints, per paper, how many questions are tagged and how many need recent news. Needs PyYAML |
+| `questions_for_topic.py` | Lists the tagged past questions for a topic (or a prefix such as `G3`) with a link to the official paper. Reads only the tag files, so it runs anywhere |
 
 ## Set up
 
