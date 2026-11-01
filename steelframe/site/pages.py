@@ -181,8 +181,9 @@ def me_page(site):
 
 def corrections_page(site, corrections):
     if corrections:
-        rows = "".join(f'<tr><td>{esc(c["date"])}</td><td><a href="p/{esc(c["slug"])}.html">{esc(c["title"])}</a></td>'
-                       f'<td>{esc(c["text"])}</td></tr>' for c in corrections)
+        def name(c):
+            return f'<a href="p/{esc(c["slug"])}.html">{esc(c["title"])}</a>' if c["slug"] else esc(c["title"]) + " (taken down)"
+        rows = "".join(f'<tr><td>{esc(c["date"])}</td><td>{name(c)}</td><td>{esc(c["text"])}</td></tr>' for c in corrections)
         table = f'<table><thead><tr><th>Date</th><th>Piece</th><th>Correction</th></tr></thead><tbody>{rows}</tbody></table>'
     else:
         table = "<p>No corrections yet.</p>"

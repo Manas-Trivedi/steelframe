@@ -16,6 +16,7 @@ import sys
 from datetime import datetime, timezone
 
 from ..llm.errors import AllRoutesFailed
+from ..ops import corrections as ops_corrections
 from ..scout import run as scout_run
 from ..scout.store import Store, now
 from ..taxonomy import load_topics
@@ -153,6 +154,11 @@ def run(router, store, sources, topics, config, out=sys.stdout):
         print("PAUSED: the kill switch is on in config/gate.json. Nothing was fetched, written or published.", file=out)
         return 0
     ensure_schema(store.db)
+    paused = ops_corrections.active_pause(store.db)
+    if paused:
+        print(f"PAUSED by the audit alarm: {paused}. Nothing was written or published. "
+              "After checking, run: python3 -m steelframe.ops.audit resume", file=out)
+        return 1
     copyable = {s["id"]: bool(s.get("copy")) for s in sources}
     codes = [scout_run.run(sources, store, out=out), triage.run(router, store, topics, out=out)]
     room = config["daily_issue_cap"] - decided_today(store.db)

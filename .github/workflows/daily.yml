@@ -1,0 +1,78 @@
+# Daily run: fetch, write, check, publish, build the site, audit. Does nothing until the maintainer turns it on.
+# To turn on: set the repository variable PIPELINE_ENABLED to "true" and add the secrets GEMINI_API_KEY,
+# GROQ_API_KEY and OPENROUTER_API_KEY. See docs/app/STACK.md and docs/operations/CORRECTIONS.md.
+name: daily
+on:
+  schedule:
+    - cron: "30 0 * * *"   # 06:00 India time
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: daily
+  cancel-in-progress: false   # two runs at once would write the same database
+
+jobs:
+  run:
+    if: ${{ vars.PIPELINE_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore the database from the state branch
+        run: |
+          mkdir -p data/raw
+          if git ls-remote --exit-code --heads origin state >/dev/null 2>&1; then
+            git fetch origin state
+            git show origin/state:scout.sqlite > data/raw/scout.sqlite
+            git show origin/state:quota.sqlite > data/raw/quota.sqlite || true
+            python3 -c "import sqlite3; sqlite3.connect('data/raw/scout.sqlite').execute('select count(*) from sqlite_master')"
+          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Tests
+        run: python3 -m unittest discover -s tests -t .
+      - name: Daily run
+        id: daily
+        run: python3 -m steelframe.pipeline.daily
+        continue-on-error: true   # exit 1 means something was held or deferred: still save and publish what finished
+      - name: Audit
+        id: audit
+        run: python3 -m steelframe.ops.audit run
+        continue-on-error: true
+      - name: Build the site
+        run: python3 -m steelframe.site.build
+      - name: Save the database to the state branch
+        run: |
+          git config user.name "steelframe-bot"
+          git config user.email "noreply@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin state >/dev/null 2>&1; then
+            git fetch origin state:state
+            git worktree add /tmp/state state
+          else
+            git worktree add --orphan -b state /tmp/state
+          fi
+          cp data/raw/scout.sqlite /tmp/state/scout.sqlite
+          cp data/raw/quota.sqlite /tmp/state/quota.sqlite 2>/dev/null || true
+          cd /tmp/state
+          git add -A
+          git commit -m "state $(date -u +%F)" || echo "no change to save"
+          git push origin state
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+      - uses: actions/deploy-pages@v4
+      - name: Fail the job if the run needs attention
+        if: ${{ steps.daily.outcome == 'failure' || steps.audit.outcome == 'failure' }}
+        run: |
+          echo "The daily run or the audit exited non-zero: something was held, deferred, failed or the alarm is on. Read the logs above." >&2
+          exit 1

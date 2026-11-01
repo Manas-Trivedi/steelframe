@@ -56,6 +56,16 @@ def load_corrections(db):
     return found
 
 
+def all_corrections(db, live_slugs):
+    """Every correction, newest first, including takedowns. A taken-down piece has no page, so no link."""
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'correction'").fetchone():
+        return []
+    rows = db.execute("SELECT c.item_id, c.noted_at, c.text, e.title FROM correction c"
+                      " LEFT JOIN editorial e ON e.item_id = c.item_id ORDER BY c.noted_at DESC").fetchall()
+    return [{"date": noted[:10], "text": text, "title": title or f"Item {item_id}", "slug": live_slugs.get(item_id)}
+            for item_id, noted, text, title in rows]
+
+
 def paper_links(path=PAPER_LINKS):
     with open(path, encoding="utf-8") as f:
         return {(r["year"], r["stage"], r["paper"]): r["official_url"] for r in csv.DictReader(f)}
@@ -103,9 +113,7 @@ def build(db, out_dir, site, topics, assets=ASSETS, links=None, today=None):
     write("map.html", pages.map_page(site, topics, counts, recent))
     write("revision.html", pages.revision_page(site))
     write("me.html", pages.me_page(site))
-    corrected = [{"date": c["date"], "text": c["text"], "slug": e["slug"], "title": e["title"]}
-                 for e in editorials for c in e["corrections"]]
-    write("corrections.html", pages.corrections_page(site, sorted(corrected, key=lambda c: c["date"], reverse=True)))
+    write("corrections.html", pages.corrections_page(site, all_corrections(db, {e["item_id"]: e["slug"] for e in editorials})))
     return {"editorials": len(editorials), "months": len(listing)}
 
 
