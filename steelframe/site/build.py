@@ -14,6 +14,7 @@ import sys
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
+from ..pipeline import daily, triage
 from ..scout.store import Store
 from ..taxonomy import load_topics, past_questions
 from . import pages
@@ -79,6 +80,8 @@ def past_links_for(topic, links, limit=8):
 
 
 def build(db, out_dir, site, topics, assets=ASSETS, links=None, today=None):
+    daily.ensure_schema(db)  # a database the pipeline has never run on has no tables yet: build an empty site
+    db.executescript(triage.SCHEMA)
     links = links if links is not None else paper_links()
     today = today or datetime.now(timezone.utc)
     editorials = load_published(db, topics)

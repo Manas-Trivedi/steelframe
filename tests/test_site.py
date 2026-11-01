@@ -147,6 +147,11 @@ class BuildTests(unittest.TestCase):
         self.assertNotIn("Old</a>", page)     # outside 30 days
         self.assertIn("No editorials in the last 30 days.", page)
 
+    def test_database_the_pipeline_never_ran_on_builds_an_empty_site(self):
+        result = self.build(Store(":memory:"))
+        self.assertEqual(result["editorials"], 0)
+        self.assertTrue("Nothing has been published yet." in self.read("index.html"))
+
     def test_unpublishing_removes_the_old_page(self):
         store = make_store()
         seed(store, 1, "published")
