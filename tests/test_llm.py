@@ -3,6 +3,7 @@ import json
 import os
 import unittest
 import urllib.error
+from datetime import datetime, timezone
 from unittest import mock
 
 from steelframe.llm.errors import AllRoutesFailed, AuthError, NotFree, RateLimited, Rejected, Unavailable
@@ -55,6 +56,15 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(result.tokens_out, 5)
         self.assertEqual(opener.requests[0].get_header("X-goog-api-key"), "secret")
         self.assertIn("gem-1:generateContent", opener.requests[0].full_url)
+
+    def test_how_the_model_stopped_is_kept_for_both_provider_kinds(self):
+        gemini = {"candidates": [{"content": {"parts": [{"text": '{"a'}]}, "finishReason": "MAX_TOKENS"}],
+                  "usageMetadata": {"candidatesTokenCount": 7, "thoughtsTokenCount": 4089}}
+        self.assertEqual(Gemini("gemini", "https://g.test", "K", FakeOpener(gemini)).complete("m", "s", "u").detail,
+                         "finishReason=MAX_TOKENS, thoughtsTokens=4089")
+        openai = {"choices": [{"message": {"content": None}, "finish_reason": "length"}]}
+        self.assertEqual(OpenAICompatible("groq", "https://g.test", "K", FakeOpener(openai)).complete("m", "s", "u").detail,
+                         "finish_reason=length")
 
     def test_gemini_blocked_and_empty_answers_are_rejected(self):
         for reply in ({"promptFeedback": {"blockReason": "SAFETY"}}, {"candidates": [{"finishReason": "SAFETY"}]}):
@@ -126,6 +136,15 @@ class RouterTests(unittest.TestCase):
         a.results.append(ok("a"))
         router.complete_json("triage", "s", "u")
         self.assertEqual(a.calls, 2)
+
+    def test_a_rate_limit_on_one_model_leaves_the_provider_other_models_usable(self):
+        stub = Stub("a", RateLimited("429", 30), ok("a"), ok("a"))
+        now = [1000.0]
+        router = Router({"a": stub}, {"triage": [("a", "m1"), ("a", "m2")]}, Quota(":memory:", {}),
+                        sleep=lambda s: None, clock=lambda: now[0])
+        router.complete_json("triage", "s", "u")  # m1 is limited, m2 answers
+        router.complete_json("triage", "s", "u")  # m1 is still cooling down and is not asked again
+        self.assertEqual(stub.calls, 3)
 
     def test_waits_once_when_every_route_is_only_rate_limited(self):
         a = Stub("a", RateLimited("429", 20), ok("a"))
@@ -205,6 +224,15 @@ class RouterTests(unittest.TestCase):
         parsed, result = self.make([a, b, c]).complete_json("triage", "s", "u", validate=validate)
         self.assertEqual((parsed, result.provider), ({"a": 1}, "c"))
 
+    def test_a_cut_off_answer_is_reported_with_how_it_stopped(self):
+        from steelframe.llm.providers import Result
+        cut = Result('{"items": [{"id": 1, "reason": "unterm', 10, 500, "a", "m", "finishReason=MAX_TOKENS, thoughtsTokens=3500")
+        with self.assertRaises(AllRoutesFailed) as caught:
+            self.make([Stub("a", cut)]).complete_json("triage", "s", "u", max_tokens=4096)
+        message = str(caught.exception)
+        for part in ("not valid JSON", "finishReason=MAX_TOKENS", "thoughtsTokens=3500", "500/4096 tokens out", "unterm"):
+            self.assertIn(part, message)
+
     def test_quota_ceiling_skips_provider(self):
         a, b = Stub("a", ok("a"), ok("a")), Stub("b", ok("b"))
         router = self.make([a, b], limits={"a": {"rpd": 1}})
@@ -243,6 +271,24 @@ class QuotaTests(unittest.TestCase):
         self.assertFalse(daily.allowed("p"))
         now[0] += 86400
         self.assertTrue(daily.allowed("p"))
+
+    def test_each_model_is_counted_on_its_own_and_its_limit_overrides_the_providers(self):
+        quota = Quota(":memory:", {"p": {"rpd": 1}, "p/big": {"rpd": 3}})
+        quota.record("p/small", 1)
+        quota.record("p/big", 1)
+        self.assertFalse(quota.allowed("p/small"))  # the provider's limit applies to a model without its own
+        self.assertTrue(quota.allowed("p/big"))  # its own limit is higher
+        self.assertTrue(quota.allowed("p/other"))  # nothing counted against it
+
+    def test_the_day_turns_at_midnight_in_the_configured_zone(self):
+        now = [datetime(2026, 11, 2, 7, 30, tzinfo=timezone.utc).timestamp()]  # 23:30 on 1 Nov in Pacific time
+        pacific = Quota(":memory:", {"p": {"rpd": 1, "tz": "America/Los_Angeles"}}, clock=lambda: now[0])
+        utc = Quota(":memory:", {"p": {"rpd": 1}}, clock=lambda: now[0])
+        pacific.record("p/m", 1)
+        utc.record("p/m", 1)
+        now[0] += 3600  # 00:30 on 2 Nov in Pacific time, still 2 Nov in UTC
+        self.assertTrue(pacific.allowed("p/m"))
+        self.assertFalse(utc.allowed("p/m"))
 
 
 if __name__ == "__main__":

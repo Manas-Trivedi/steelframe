@@ -115,7 +115,7 @@ Otherwise: if the fault is fixable and this is the first or second attempt, the 
 
 | Rule | Where |
 |---|---|
-| Only providers with a free tier are configured: Gemini (AI Studio), Groq, OpenRouter, and others added later | `config/models.json` |
+| Only providers with a free tier are configured: Gemini (AI Studio), Groq, and others added later | `config/models.json` |
 | An OpenRouter model must end in `:free`, or the router refuses to call it | Code |
 | Billing is never turned on at any provider. A free key that hits its quota returns an error, not a charge | Policy, written here |
 | A client-side counter stops calls well before each provider's published limit | Code |

@@ -32,7 +32,7 @@ The product has no device sync in v1 (decided in the product definition). So a r
 | Hosting | A free static host: GitHub Pages (assumption) | Free, simple, HTTPS |
 | Pipeline state | The SQLite file, kept on a `state` branch of the repository (assumption) | The scheduler has no disk that lasts between runs. The file is small |
 | Scheduler | GitHub Actions on a daily cron, switched off until the maintainer sets a variable and the three API keys | Free for public repositories. Does nothing until switched on |
-| Model access | Gemini, Groq and OpenRouter free tiers, through the router | Already built |
+| Model access | Gemini and Groq free tiers, through the router | Already built |
 
 ## Choices considered
 

@@ -9,30 +9,38 @@
       "kind": "openai",
       "base_url": "https://api.groq.com/openai/v1",
       "key_env": "GROQ_API_KEY"
-    },
-    "openrouter": {
-      "kind": "openai",
-      "base_url": "https://openrouter.ai/api/v1",
-      "key_env": "OPENROUTER_API_KEY"
     }
   },
   "limits": {
     "gemini": {
-      "rpm": 4,
-      "rpd": 80
+      "rpm": 5,
+      "rpd": 20,
+      "tz": "America/Los_Angeles"
     },
     "groq": {
       "rpm": 24,
       "rpd": 800,
       "tpd": 160000
     },
-    "openrouter": {
-      "rpm": 16,
-      "rpd": 40
+    "gemini/gemini-3.1-flash-lite": {
+      "rpm": 15,
+      "rpd": 500
+    },
+    "gemini/gemini-3.5-flash-lite": {
+      "rpm": 15,
+      "rpd": 500
     }
   },
   "routes": {
     "triage": [
+      [
+        "gemini",
+        "gemini-3.1-flash-lite"
+      ],
+      [
+        "gemini",
+        "gemini-3.5-flash-lite"
+      ],
       [
         "groq",
         "qwen/qwen3.8-27b"
@@ -46,8 +54,12 @@
         "gemini-3-flash-preview"
       ],
       [
-        "openrouter",
-        "nvidia/nemotron-3.5-lightning:free"
+        "gemini",
+        "gemini-3.6-flash"
+      ],
+      [
+        "gemini",
+        "gemini-3.8-flash"
       ]
     ],
     "researcher": [
@@ -60,8 +72,12 @@
         "gemini-3-flash-preview"
       ],
       [
-        "openrouter",
-        "nvidia/nemotron-3-ultra-550b-a55b:free"
+        "gemini",
+        "gemini-3.6-flash"
+      ],
+      [
+        "gemini",
+        "gemini-3.8-flash"
       ]
     ],
     "writer": [
@@ -74,8 +90,12 @@
         "gemini-3-flash-preview"
       ],
       [
-        "openrouter",
-        "nvidia/nemotron-3-ultra-550b-a55b:free"
+        "gemini",
+        "gemini-3.6-flash"
+      ],
+      [
+        "gemini",
+        "gemini-3.8-flash"
       ],
       [
         "groq",
@@ -88,12 +108,16 @@
         "openai/gpt-oss-120b"
       ],
       [
-        "openrouter",
-        "nvidia/nemotron-3-ultra-550b-a55b:free"
+        "gemini",
+        "gemini-3-flash-preview"
       ],
       [
         "gemini",
-        "gemini-3-flash-preview"
+        "gemini-3.6-flash"
+      ],
+      [
+        "gemini",
+        "gemini-3.8-flash"
       ]
     ],
     "examiner": [
@@ -102,12 +126,16 @@
         "openai/gpt-oss-120b"
       ],
       [
-        "openrouter",
-        "nvidia/nemotron-3-ultra-550b-a55b:free"
+        "gemini",
+        "gemini-3-flash-preview"
       ],
       [
         "gemini",
-        "gemini-3-flash-preview"
+        "gemini-3.6-flash"
+      ],
+      [
+        "gemini",
+        "gemini-3.8-flash"
       ]
     ]
   },
@@ -118,18 +146,14 @@
       "gemini-3.1-flash-lite",
       "gemini-3.8-flash",
       "gemini-flash-latest",
-      "gemma-4-31b-it"
+      "gemma-4-31b-it",
+      "gemini-3.5-flash-lite",
+      "gemini-3.6-flash"
     ],
     "groq": [
       "openai/gpt-oss-120b",
       "openai/gpt-oss-20b",
       "qwen/qwen3.8-27b"
-    ],
-    "openrouter": [
-      "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "nvidia/nemotron-3.5-lightning:free",
-      "google/gemma-4-31b-it:free",
-      "google/gemma-4-26b-a4b-it:free"
     ]
   }
 }

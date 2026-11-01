@@ -16,7 +16,7 @@ class Router:
         self.providers, self.routes, self.quota = providers, routes, quota
         self.sleep, self.clock, self.max_wait = sleep, clock, max_wait
         self.calls = 0  # model calls made through this router, successful or not, for per-issue counts
-        self.cooldown = {}  # provider -> time before which it is skipped
+        self.cooldown = {}  # (provider, model) -> time before which it is skipped; providers limit each model on its own
         self.disabled = {}  # provider -> reason (bad or missing key), skipped for this process
         self.closed_routes = {}  # (provider, model) -> reason (403 on one model), skipped for this process
         for stage, route in routes.items():
@@ -61,25 +61,25 @@ class Router:
                 reasons.append(f"{label}: skipped, {self.closed_routes[(provider_name, model)]}")
                 hard_failure = True
                 continue
-            remaining = self.cooldown.get(provider_name, 0) - self.clock()
+            remaining = self.cooldown.get((provider_name, model), 0) - self.clock()
             if remaining > 0:
                 reasons.append(f"{label}: skipped, cooling down after a rate limit")
                 waits.append(remaining)
                 continue
-            if not self.quota.allowed(provider_name):
+            if not self.quota.allowed(label):
                 reasons.append(f"{label}: skipped, own quota ceiling reached")
                 hard_failure = True  # the minute window may clear, but a daily ceiling will not: do not wait
                 continue
             try:
                 result = self._call(provider_name, model, system, user, max_tokens)
-                self.quota.record(provider_name, result.tokens_in + result.tokens_out)
-                parsed = self._parse(result.text)
+                self.quota.record(label, result.tokens_in + result.tokens_out)
+                parsed = self._parse(result, max_tokens)
                 if validate:
                     validate(parsed)
                 return (parsed, result), reasons, None
             except RateLimited as error:
                 delay = error.retry_after or 60
-                self.cooldown[provider_name] = self.clock() + delay
+                self.cooldown[(provider_name, model)] = self.clock() + delay
                 reasons.append(f"{label}: rate limited")
                 waits.append(delay)
             except AuthError as error:
@@ -110,8 +110,11 @@ class Router:
             return provider.complete(model, system, user, True, max_tokens)
 
     @staticmethod
-    def _parse(text):
+    def _parse(result, max_tokens):
         try:
-            return json.loads(FENCE.sub("", text.strip()))
+            return json.loads(FENCE.sub("", result.text.strip()))
         except ValueError as error:
-            raise ValueError(f"answer is not valid JSON: {error}") from error
+            # Say how the model stopped and what it sent, so a cut-off answer (finish reason at the limit,
+            # tokens_out near max_tokens) can be told from a model that wrote bad JSON or nothing.
+            raise ValueError(f"answer is not valid JSON: {error} [{result.detail}, {result.tokens_out}/{max_tokens} tokens out, "
+                             f"{len(result.text)} chars, starts {result.text[:60]!r}, ends {result.text[-60:]!r}]") from error

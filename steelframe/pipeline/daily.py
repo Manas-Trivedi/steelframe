@@ -78,8 +78,8 @@ def waiting_packs(db, limit=None):
 
 
 def has_headroom(router):
-    """True if every model stage has at least one provider with free quota left today."""
-    return all(any(router.quota.allowed(provider) for provider, _ in router.routes.get(stage, []))
+    """True if every model stage has at least one model with free quota left today."""
+    return all(any(router.quota.allowed(f"{provider}/{model}") for provider, model in router.routes.get(stage, []))
                for stage in ("writer", "fact_checker", "examiner"))
 
 

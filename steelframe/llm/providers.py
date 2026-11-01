@@ -6,7 +6,8 @@ from collections import namedtuple
 from .errors import AuthError, NotFree, Rejected, Unavailable
 from .http import request_json
 
-Result = namedtuple("Result", "text tokens_in tokens_out provider model")
+# `detail` says how the model stopped (finish reason, thinking tokens), so a bad answer can be told from a cut-off one.
+Result = namedtuple("Result", "text tokens_in tokens_out provider model detail", defaults=("",))
 
 
 class Provider:
@@ -42,11 +43,13 @@ class OpenAICompatible(Provider):
             payload["response_format"] = {"type": "json_object"}
         reply = self._call(f"{self.base_url}/chat/completions", {"Authorization": f"Bearer {self.key()}"}, payload)
         try:
-            text = reply["choices"][0]["message"]["content"] or ""
+            choice = reply["choices"][0]
+            text = choice["message"]["content"] or ""
         except (KeyError, IndexError, TypeError) as error:
             raise Unavailable(f"unexpected reply shape: {str(reply)[:150]}") from error
         usage = reply.get("usage") or {}
-        return Result(text, usage.get("prompt_tokens", 0), usage.get("completion_tokens", 0), self.name, model)
+        return Result(text, usage.get("prompt_tokens", 0), usage.get("completion_tokens", 0), self.name, model,
+                      f"finish_reason={choice.get('finish_reason')}")
 
     def list_models(self):
         reply = self._call(f"{self.base_url}/models", {"Authorization": f"Bearer {self.key()}"})
@@ -72,7 +75,8 @@ class Gemini(Provider):
         if not text:
             raise Rejected(f"empty answer, finishReason={candidates[0].get('finishReason')}")
         usage = reply.get("usageMetadata") or {}
-        return Result(text, usage.get("promptTokenCount", 0), usage.get("candidatesTokenCount", 0), self.name, model)
+        return Result(text, usage.get("promptTokenCount", 0), usage.get("candidatesTokenCount", 0), self.name, model,
+                      f"finishReason={candidates[0].get('finishReason')}, thoughtsTokens={usage.get('thoughtsTokenCount', 0)}")
 
     def list_models(self):
         reply = self._call(f"{self.base_url}/models?pageSize=200", {"x-goog-api-key": self.key()})
