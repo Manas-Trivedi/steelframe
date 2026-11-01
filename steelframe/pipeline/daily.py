@@ -108,10 +108,14 @@ def process_issue(router, db, item_id, pack, topics, copyable, config, out=sys.s
         if row:  # a crash left a draft without a review: check it rather than pay for another
             draft, model = json.loads(row[0]), row[1]
         else:
+            print(f"item {item_id}: attempt {attempt}: writing (a free model can take a minute or two)...", file=out, flush=True)
             draft, model = writer.write(router, pack, topics, failures)
             writer.save_draft(db, item_id, attempt, draft, model)
         writer_provider = model.split("/")[0]
+        print(f"item {item_id}: attempt {attempt}: checking...", file=out, flush=True)
         fact = fact_checker.check_draft(router, draft, pack, copyable, writer_provider)
+        if fact["passed"]:
+            print(f"item {item_id}: attempt {attempt}: scoring...", file=out, flush=True)
         exam = examine(router, draft, fact, writer_provider, topics) if fact["passed"] else None
         decision = gate.decide(attempt, draft["topic"], fact["failures"], exam, config)
         _save_review(db, item_id, attempt, fact["failures"], fact["checker"], exam, decision, router.calls - calls_before)
