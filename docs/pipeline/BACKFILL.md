@@ -43,7 +43,7 @@ The checks are the same as for a fresh article. The backfill never skips a check
 4. The site is rebuilt. Each backfilled piece shows its release date (for example 15 October) and the tag "From the archive". Its web address still uses the day it was written, so no link ever changes.
 5. Next day, the scheduled run writes up to 3 fresh articles, and the backfill can run again for 7 more.
 
-At 7 a day, the 631 kept items take about 3 months, and the 300-a-month cap is never the limit unless the daily runs are all used.
+At 7 a day, the 631 kept items take about 3 months. With 3 fresh articles as well, a full month is about 300, so the monthly cap is the same limit seen from the other side.
 
 ## Choices considered
 
@@ -70,4 +70,4 @@ At 7 a day, the 631 kept items take about 3 months, and the 300-a-month cap is n
 |---|---|
 | Are 10 a day and 300 a month right? | Set by the maintainer, who is not an aspirant. Review after a beta |
 | How many calls does one article cost? | Not measured. The first runs should report it |
-| A 15-day gap: archive pieces older than the exam cycle may not help | Decide how far back to go after reading the first results |
+| How far back is worth going? | Pieces older than the current exam cycle may not help. Decide after reading the first results |
