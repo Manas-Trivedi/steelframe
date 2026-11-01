@@ -174,10 +174,11 @@ def process_issue(router, db, item_id, pack, topics, copyable, config, out=sys.s
         return status
 
 
-def run_issues(router, store, topics, copyable, config, out=sys.stdout, lane="fresh"):
+def run_issues(router, store, topics, copyable, config, out=sys.stdout, lane="fresh", limit=None):
     """Decide the waiting issues of a lane, up to its daily cap. Returns (published, held, failed, deferred)."""
     ensure_schema(store.db)
     room = lane_room(store.db, config, lane)
+    room = room if limit is None else min(room, limit)
     published = held = failed = deferred = 0
     for item_id, pack in waiting_packs(store.db, room, lane):
         if not has_headroom(router):
@@ -200,7 +201,8 @@ def run_issues(router, store, topics, copyable, config, out=sys.stdout, lane="fr
     return published, held, failed, deferred
 
 
-def run(router, store, sources, topics, config, out=sys.stdout):
+def stopped(store, config, out):
+    """The exit code if the kill switch or the audit alarm stops the run, else None. Used by every run that writes."""
     if config["kill_switch"]:
         print("PAUSED: the kill switch is on in config/gate.json. Nothing was fetched, written or published.", file=out)
         return 0
@@ -210,6 +212,13 @@ def run(router, store, sources, topics, config, out=sys.stdout):
         print(f"PAUSED by the audit alarm: {paused}. Nothing was written or published. "
               "After checking, run: python3 -m steelframe.ops.audit resume", file=out)
         return 1
+    return None
+
+
+def run(router, store, sources, topics, config, out=sys.stdout):
+    code = stopped(store, config, out)
+    if code is not None:
+        return code
     copyable = {s["id"]: bool(s.get("copy")) for s in sources}
     codes = [scout_run.run(sources, store, out=out), triage.run(router, store, topics, out=out)]
     room = lane_room(store.db, config, "fresh")
