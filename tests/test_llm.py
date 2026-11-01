@@ -146,6 +146,19 @@ class RouterTests(unittest.TestCase):
         router.complete_json("triage", "s", "u")  # m1 is still cooling down and is not asked again
         self.assertEqual(stub.calls, 3)
 
+    def test_a_rate_limit_says_why_and_a_daily_quota_keeps_the_model_out_for_the_run(self):
+        daily = RateLimited('429 {"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}')
+        minute = RateLimited('429 {"quotaId": "GenerateRequestsPerMinute"}', 5)
+        stub = Stub("a", daily, minute)
+        router = Router({"a": stub}, {"triage": [("a", "m1"), ("a", "m2")]}, Quota(":memory:", {}),
+                        sleep=lambda s: None, max_wait=0)
+        with self.assertRaises(AllRoutesFailed) as caught:
+            router.complete_json("triage", "s", "u")
+        reasons = caught.exception.reasons
+        self.assertIn("a/m1: rate limited (daily quota)", reasons)
+        self.assertTrue(any("a/m2: rate limited (429" in r and "PerMinute" in r for r in reasons))
+        self.assertGreater(router.cooldown[("a", "m1")] - router.clock(), 5 * 3600)
+
     def test_waits_once_when_every_route_is_only_rate_limited(self):
         a = Stub("a", RateLimited("429", 20), ok("a"))
         waits = []

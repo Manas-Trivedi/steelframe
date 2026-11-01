@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS stall (
 );
 """
 
+MAX_FAILED_IN_A_ROW = 2  # issues that fail with every model unreachable, one after another, then the run stops
 MAX_STALLED_RUNS = 3  # runs in a row where every model answered but none gave a usable draft, then the issue is held
 
 
@@ -191,8 +192,12 @@ def run_issues(router, store, topics, copyable, config, out=sys.stdout, lane="fr
         room = room if limit is None else min(room, limit)
     else:
         room = limit or 0
-    published = held = failed = deferred = 0
+    published = held = failed = deferred = in_a_row = 0
     for item_id, pack in waiting_packs(store.db, room, lane):
+        if in_a_row >= MAX_FAILED_IN_A_ROW:  # the models are down or out of quota: more tries would only churn
+            deferred += 1
+            print(f"item {item_id}: deferred, {in_a_row} issues in a row could not reach a model", file=out)
+            continue
         if deadline is not None and time.monotonic() > deadline:
             deferred += 1
             print(f"item {item_id}: deferred, out of time for this run", file=out)
@@ -206,10 +211,13 @@ def run_issues(router, store, topics, copyable, config, out=sys.stdout, lane="fr
         except AllRoutesFailed as error:
             if _stalled(store.db, item_id, pack, error, out):
                 held += 1
+                in_a_row = 0
                 continue
             failed += 1
+            in_a_row = 0 if _unusable_answers_only(error) else in_a_row + 1  # only outages and quota count
             print(f"item {item_id}: FAILED, will resume next run: {error}", file=out)
             continue
+        in_a_row = 0
         with store.db:
             store.db.execute("DELETE FROM stall WHERE item_id = ?", (item_id,))
         published += status == "published"

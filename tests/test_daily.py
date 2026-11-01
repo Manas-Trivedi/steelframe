@@ -193,6 +193,19 @@ class RunIssuesTests(unittest.TestCase):
                                 fact_checker=[verdicts()], examiner=[reply(4)])
         self.assertEqual(self.run_issues(router, store), (1, 0, 1, 0))
 
+    def test_two_issues_in_a_row_that_cannot_reach_a_model_stop_the_run(self):
+        store = make_store(n=4)
+        down = AllRoutesFailed("writer", ["gemini/m: rate limited", "groq/m: rate limited"])
+        router = ScriptedRouter(writer=[down, down])
+        self.assertEqual(self.run_issues(router, store), (0, 0, 2, 1))
+        self.assertEqual(router.calls, 2)  # the third issue (the cap is 3) was not tried
+
+    def test_issues_the_models_answered_badly_do_not_stop_the_run(self):
+        store = make_store(n=3)
+        bad = AllRoutesFailed("writer", ["gemini/m: unusable answer or outage, brief needs 3 to 5 bullets"])
+        router = ScriptedRouter(writer=[bad, bad, good_draft()], fact_checker=[verdicts()], examiner=[reply(4)])
+        self.assertEqual(self.run_issues(router, store), (1, 0, 2, 0))
+
     def test_issue_no_model_can_write_is_held_after_three_runs(self):
         store = make_store()
         unusable = ["gemini/m: unusable answer or outage, deep_dive is too short", "groq/m: unusable answer or outage, bad JSON"]

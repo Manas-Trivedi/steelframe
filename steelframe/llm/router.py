@@ -10,6 +10,9 @@ log = logging.getLogger("steelframe.llm")
 FENCE = re.compile(r"^```(?:json)?\s*|\s*```$")
 
 
+DAILY_QUOTA_COOLDOWN = 6 * 3600  # seconds; longer than any run, shorter than a day
+
+
 class Router:
     def __init__(self, providers, routes, quota, sleep=time.sleep, clock=time.time, max_wait=90):
         """routes: {stage: [(provider_name, model), ...]} in order of preference."""
@@ -79,8 +82,11 @@ class Router:
                 return (parsed, result), reasons, None
             except RateLimited as error:
                 delay = error.retry_after or 60
+                detail = " ".join(str(error).split())
+                if "PerDay" in detail:  # the day's quota is gone: do not ask this model again in this run
+                    delay = max(delay, DAILY_QUOTA_COOLDOWN)
                 self.cooldown[(provider_name, model)] = self.clock() + delay
-                reasons.append(f"{label}: rate limited")
+                reasons.append(f"{label}: rate limited ({'daily quota' if 'PerDay' in detail else detail[:150]})")
                 waits.append(delay)
             except AuthError as error:
                 if error.status == 403:
