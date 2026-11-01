@@ -90,7 +90,7 @@ Tested on 31 October 2026 from one home network, with a plain script that names 
 |---|---|---|
 | RBI press release feed | Works | 10 items |
 | The Hindu and Indian Express feeds | Work technically | Switched off. The terms do not allow our use |
-| PIB release feed | **Blocked** | First attempt timed out. Second returned 403 Forbidden |
+| PIB release feed | Works with the plain name | English feed: `RssMain.aspx?ModId=6&Lang=1&Regid=1&reg=1`, 20 items, no dates. The `Regid=3` feed is Hindi only |
 | data.gov.in, India Code | **Blocked** | 403 Forbidden |
 | NCERT, Parliament e-library, Supreme Court main site | Timed out | Not tried again |
 | PRS, eGazette home page | Works | No feed. Pages must be read |

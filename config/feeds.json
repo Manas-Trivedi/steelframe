@@ -2,7 +2,7 @@
   {
     "id": "PIB",
     "name": "Press Information Bureau, all releases",
-    "url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=2&Regid=3&reg=48",
+    "url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=1&reg=1",
     "format": "rss",
     "tier": "primary"
   },
