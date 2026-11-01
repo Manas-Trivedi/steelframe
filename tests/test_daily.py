@@ -156,6 +156,29 @@ class RunIssuesTests(unittest.TestCase):
                                 fact_checker=[verdicts()], examiner=[reply(4)])
         self.assertEqual(self.run_issues(router, store), (1, 0, 1, 0))
 
+    def test_issue_no_model_can_write_is_held_after_three_runs(self):
+        store = make_store()
+        unusable = ["gemini/m: unusable answer or outage, deep_dive is too short", "groq/m: unusable answer or outage, bad JSON"]
+        outcomes = [self.run_issues(ScriptedRouter(writer=[AllRoutesFailed("writer", unusable)]), store) for _ in range(3)]
+        self.assertEqual(outcomes, [(0, 0, 1, 0), (0, 0, 1, 0), (0, 1, 0, 0)])
+        self.assertEqual(rows(store, "SELECT status FROM editorial"), [("held",)])
+
+    def test_outage_or_quota_failures_are_never_counted_toward_a_hold(self):
+        store = make_store()
+        down = ["gemini/m: unusable answer or outage, boom", "groq/m: rate limited"]
+        for _ in range(4):
+            self.assertEqual(self.run_issues(ScriptedRouter(writer=[AllRoutesFailed("writer", down)]), store), (0, 0, 1, 0))
+        self.assertEqual(rows(store, "SELECT COUNT(*) FROM editorial")[0][0], 0)
+
+    def test_a_good_run_resets_the_stall_count(self):
+        store = make_store()
+        unusable = ["gemini/m: unusable answer or outage, bad"]
+        for _ in range(2):
+            self.run_issues(ScriptedRouter(writer=[AllRoutesFailed("writer", unusable)]), store)
+        router = ScriptedRouter(writer=[good_draft()], fact_checker=[verdicts()], examiner=[reply(4)])
+        self.assertEqual(self.run_issues(router, store), (1, 0, 0, 0))
+        self.assertEqual(rows(store, "SELECT COUNT(*) FROM stall")[0][0], 0)
+
     def test_held_and_published_are_counted_apart(self):
         store = make_store(n=2)
         router = ScriptedRouter(writer=[bad_quote_draft()] * 3 + [good_draft()], fact_checker=[verdicts()], examiner=[reply(4)])

@@ -5,6 +5,8 @@
 Every stage saves its result before the next starts, so a rerun resumes where the last run stopped: an issue that
 was mid-revision continues from its last saved attempt. At most `daily_issue_cap` issues are decided a day; an
 issue is never rushed through with fewer checks when the free quota is short, it waits for the next day.
+An issue for which every model answers but none gives a usable draft, three runs in a row, is held (never for
+outages, quota or auth failures, which keep retrying). `ops.corrections requeue` brings a held issue back.
 
 Exit code: 0 everything finished and nothing was held, 1 something was held, failed or deferred (an alert), 2 nothing
 was published and something failed. The kill switch (config/gate.json) stops the run before any work.
@@ -48,7 +50,15 @@ CREATE TABLE IF NOT EXISTS editorial (
     reasons TEXT NOT NULL,
     decided_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS stall (
+    item_id INTEGER PRIMARY KEY REFERENCES item (id),
+    runs INTEGER NOT NULL,
+    last_reasons TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
+
+MAX_STALLED_RUNS = 3  # runs in a row where every model answered but none gave a usable draft, then the issue is held
 
 
 def ensure_schema(db):
@@ -71,6 +81,36 @@ def has_headroom(router):
     """True if every model stage has at least one provider with free quota left today."""
     return all(any(router.quota.allowed(provider) for provider, _ in router.routes.get(stage, []))
                for stage in ("writer", "fact_checker", "examiner"))
+
+
+def _unusable_answers_only(error):
+    """True if every route answered (or broke) with a draft we could not use: no rate limit, auth, skip or 4xx.
+
+    Quota, auth and outage failures must keep retrying; only a draft no model can get right is a stuck issue.
+    """
+    return all("unusable answer or outage" in reason for reason in error.reasons)
+
+
+def _stalled(db, item_id, pack, error, out):
+    """Count a run in which no model produced a usable draft; hold the issue once it has done so too often.
+
+    Returns "held" or None. An issue that keeps failing would otherwise be retried every day at the front of the queue.
+    """
+    if not _unusable_answers_only(error):
+        return None
+    row = db.execute("SELECT runs FROM stall WHERE item_id = ?", (item_id,)).fetchone()
+    runs = (row[0] if row else 0) + 1
+    with db:
+        db.execute("INSERT OR REPLACE INTO stall VALUES (?, ?, ?, ?)", (item_id, runs, json.dumps(error.reasons), now()))
+    if runs < MAX_STALLED_RUNS:
+        return None
+    reasons = [f"no model produced a usable draft in {runs} runs in a row"] + error.reasons
+    last = db.execute("SELECT MAX(attempt) FROM review WHERE item_id = ?", (item_id,)).fetchone()[0] or 1
+    _save_editorial(db, item_id, "held", last, pack["issue"], reasons)
+    print(f"item {item_id}: HELD, {reasons[0]}", file=out)
+    for reason in reasons[1:]:
+        print(f"    ALERT held: {reason[:160]}", file=out)
+    return "held"
 
 
 def _save_review(db, item_id, attempt, failures, checker, exam, decision, calls):
@@ -145,9 +185,14 @@ def run_issues(router, store, topics, copyable, config, out=sys.stdout):
         try:
             status = process_issue(router, store.db, item_id, pack, topics, copyable, config, out)
         except AllRoutesFailed as error:
+            if _stalled(store.db, item_id, pack, error, out):
+                held += 1
+                continue
             failed += 1
             print(f"item {item_id}: FAILED, will resume next run: {error}", file=out)
             continue
+        with store.db:
+            store.db.execute("DELETE FROM stall WHERE item_id = ?", (item_id,))
         published += status == "published"
         held += status == "held"
     return published, held, failed, deferred
