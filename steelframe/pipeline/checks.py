@@ -102,7 +102,6 @@ def _texts_to_scan(draft):
             yield f"{part} '{section['heading']}'", section["text"]
     for point in draft["mains_question"]["approach"]:
         yield "Mains approach", point
-    yield "Mains question", draft["mains_question"]["question"]
     for i, q in enumerate(draft["recall_questions"], 1):
         yield f"recall question {i} stem", q["question"]
         yield f"recall question {i} explanation", q["explanation"]

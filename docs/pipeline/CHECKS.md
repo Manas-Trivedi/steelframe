@@ -20,7 +20,7 @@ The Writer is a free model and will sometimes get things wrong. These checks dec
 |---|---|---|---|
 | Quote | Code | Each claim's quote is in its passage, character for character. Only spacing, curly quotes and dashes are ignored. Case matters | Invented or altered quotes |
 | Link | Code | Each claim's passage is in the evidence pack, and its source allows a copy | Invented sources, link-only sources |
-| Figure | Code | Every number in the brief, editorial, deep dive, Mains question and approach, and the stems and explanations of the recall questions also appears in a claim. "Seven" in a claim covers "7" in the text. List numbers such as "1." are ignored. Answer options are not checked, because wrong options may hold any number | A figure that was not sourced, or that differs between depths |
+| Figure | Code | Every number in the brief, editorial, deep dive, Mains approach, and the stems and explanations of the recall questions also appears in a claim. "Seven" in a claim covers "7" in the text. List numbers such as "1." are ignored. Answer options are not checked, because wrong options may hold any number | A figure that was not sourced, or that differs between depths |
 | Fact-check | Model | Every claim, and the marked answer of every recall question, is "supported" by the passage | A claim that says more, less or something different from its quote |
 
 **Order and cost.** The three code checks run first. If any fails, the model is not called, because the draft goes back to the Writer anyway. That saves one call.
@@ -55,7 +55,7 @@ On a real draft (the 31 October tax devolution release), three claims were chang
 | The Fact-checker is too harsh and blocks good drafts | The failure notes go back to the Writer. Two tries, then hold |
 | Every model is down | The stage raises, the draft stays unchecked, and nothing is published |
 | A model is on the Writer's provider because the others are down | Allowed only if no other route exists; the gate records both models |
-| The figure check rejects a legitimate static fact (such as an Article number) | Yes, deliberately. A figure must come from a passage, or it is left out |
+| The figure check rejects a legitimate static fact (such as an Article number) | Yes, deliberately. A figure must come from a passage, or it is left out. In the first real runs the Writer kept adding Article 280 and similar and was held after three tries, so the Writer prompt now says plainly to leave such numbers out. Amounts that are a rounding or unit change of a claim's figure (1.09 lakh crore for 1,09,019 crore) pass |
 
 ## Still open
 
