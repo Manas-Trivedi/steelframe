@@ -149,6 +149,20 @@ class ResearchTests(unittest.TestCase):
             self.assertFalse(pack["complete"])
             self.assertTrue(any("could not read" in p for p in pack["problems"]))
 
+    def test_model_outage_falls_back_to_the_main_item_and_says_so(self):
+        store = make_store()
+        router = FakeRouter(AllRoutesFailed("researcher", ["down"]))
+        pack = researcher.research(router, store.db, issue(), COPYABLE, fetcher_for())
+        self.assertTrue(pack["complete"])
+        self.assertEqual(len(pack["passages"]), 1)
+        self.assertTrue(any("model unavailable" in p for p in pack["problems"]))
+
+    def test_model_outage_with_unreadable_main_item_still_fails_loudly(self):
+        store = make_store()
+        router = FakeRouter(AllRoutesFailed("researcher", ["down"]))
+        with self.assertRaises(AllRoutesFailed):
+            researcher.research(router, store.db, issue(3, "RBI"), COPYABLE, fetcher_for())
+
     def test_unknown_item_id_is_an_observation(self):
         store = make_store()
         router = FakeRouter({"action": "fetch", "item_id": 999}, {"action": "done", "passages": []})
@@ -187,11 +201,21 @@ class StageTests(unittest.TestCase):
         saved = json.loads(store.db.execute("SELECT pack FROM evidence_pack WHERE item_id = 1").fetchone()[0])
         self.assertTrue(saved["complete"])
 
-    def test_stage_exits_nonzero_when_model_unreachable(self):
+    def test_stage_with_model_down_still_builds_a_main_item_pack(self):
         store = make_store()
         self.kept(store, [(1, 3, "G2.FED")])
         router = FakeRouter(AllRoutesFailed("researcher", ["down"]))
-        self.assertEqual(researcher.run_stage(router, store, COPYABLE, 3, fetcher_for(), io.StringIO()), 2)
+        out = io.StringIO()
+        self.assertEqual(researcher.run_stage(router, store, COPYABLE, 3, fetcher_for(), out), 0)
+        self.assertIn("model unavailable", out.getvalue())
+        self.assertEqual(store.db.execute("SELECT complete FROM evidence_pack").fetchone()[0], 1)
+
+    def test_stage_exits_nonzero_when_the_main_item_is_unreadable_and_model_is_down(self):
+        store = make_store()
+        self.kept(store, [(1, 3, "G2.FED")])
+        router = FakeRouter(AllRoutesFailed("researcher", ["down"]))
+        code = researcher.run_stage(router, store, COPYABLE, 3, fetcher_for(error=FetchFailed("timeout")), io.StringIO())
+        self.assertEqual(code, 2)
         self.assertEqual(store.db.execute("SELECT COUNT(*) FROM evidence_pack").fetchone()[0], 0)
 
 

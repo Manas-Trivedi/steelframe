@@ -2,6 +2,7 @@
 
     python3 -m steelframe.ops.corrections add ITEM_ID "what was wrong and what is right"
     python3 -m steelframe.ops.corrections list
+    python3 -m steelframe.ops.corrections requeue ITEM_ID               # retry a held issue from scratch
     python3 -m steelframe.ops.corrections unpublish ITEM_ID "reason"    # take a piece down and say why
 
 Nothing is changed silently: a correction is stored with its date, shown at the top of the piece and listed on the
@@ -63,6 +64,20 @@ def unpublish(db, item_id, reason):
                    (item_id, now(), f"Taken down: {reason.strip()}"))
 
 
+def requeue(db, item_id):
+    """Give a held issue a fresh start: forget its drafts and reviews so the next daily run writes it again.
+
+    Only a held issue can be requeued. A published one needs a correction or a takedown instead.
+    """
+    ensure_schema(db)
+    row = db.execute("SELECT status FROM editorial WHERE item_id = ?", (item_id,)).fetchone()
+    if row is None or row[0] != "held":
+        raise ValueError(f"item {item_id} is not held")
+    with db:
+        for table in ("review", "draft", "editorial"):
+            db.execute(f"DELETE FROM {table} WHERE item_id = ?", (item_id,))
+
+
 def start_pause(db, reason):
     ensure_schema(db)
     if active_pause(db) is None:
@@ -88,6 +103,7 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="cmd", required=True)
     add = sub.add_parser("add"); add.add_argument("item_id", type=int); add.add_argument("text")
     down = sub.add_parser("unpublish"); down.add_argument("item_id", type=int); down.add_argument("reason")
+    again = sub.add_parser("requeue"); again.add_argument("item_id", type=int)
     sub.add_parser("list")
     args = parser.parse_args(argv)
     db = Store(args.db).db
@@ -96,6 +112,8 @@ def main(argv=None):
             add_correction(db, args.item_id, args.text)
         elif args.cmd == "unpublish":
             unpublish(db, args.item_id, args.reason)
+        elif args.cmd == "requeue":
+            requeue(db, args.item_id)
         else:
             ensure_schema(db)
             for row in db.execute("SELECT item_id, noted_at, text FROM correction ORDER BY noted_at"):

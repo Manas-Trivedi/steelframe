@@ -39,6 +39,10 @@ def cited_ids(text):
 WORDS = {w: str(n) for n, w in enumerate(
     "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
     "seventeen eighteen nineteen twenty".split())}
+UNITS = {"lakh": 1e5, "lakhs": 1e5, "crore": 1e7, "crores": 1e7, "thousand": 1e3, "million": 1e6,
+         "billion": 1e9, "trillion": 1e12}
+WITH_UNITS = re.compile(r"(\d[\d,]*(?:\.\d+)?)((?:\s+(?:" + "|".join(UNITS) + r"))+)", re.I)
+ROUNDING = 0.01  # "1.09 lakh crore" stands for 1,09,019 crore: a rounding up to 1% is the same figure
 LIST_NUMBER = re.compile(r"(?m)^\s*(?:\d{1,2}[.)]|\(\d{1,2}\))\s+")  # "1. Statement" is numbering, not a figure
 
 
@@ -52,6 +56,17 @@ def numbers_in(text, words=False):
     found = {token.replace(",", "").rstrip(".") for token in NUMBER.findall(text)}
     if words:
         found |= {WORDS[w] for w in re.findall(r"[a-z]+", text.lower()) if w in WORDS}
+    return found
+
+
+def unit_values(text):
+    """{digit string: value} for figures written with units, e.g. '1.09 lakh crore' -> {'1.09': 1.09e12}."""
+    found = {}
+    for number, units in WITH_UNITS.findall(MARKER.sub("", text)):
+        value = float(number.replace(",", "").rstrip("."))
+        for unit in units.lower().split():
+            value *= UNITS[unit]
+        found[number.replace(",", "").rstrip(".")] = value
     return found
 
 
@@ -94,14 +109,19 @@ def _texts_to_scan(draft):
 
 
 def figure_check(draft):
-    allowed = set()
+    allowed, allowed_values = set(), []
     for claim in draft["claims"]:
-        allowed |= numbers_in(claim["text"], words=True) | numbers_in(claim["quote"], words=True)
+        for text in (claim["text"], claim["quote"]):
+            allowed |= numbers_in(text, words=True)
+            allowed_values += unit_values(text).values()
     failures = []
     for where, text in _texts_to_scan(draft):
-        stray = sorted(numbers_in(text) - allowed)
+        stray = numbers_in(text) - allowed
+        for digits, value in unit_values(text).items():
+            if digits in stray and any(abs(value - known) <= ROUNDING * known for known in allowed_values):
+                stray.discard(digits)  # the same amount, rounded or in other units
         if stray:
-            failures.append(f"{where}: the figure(s) {', '.join(stray)} appear in no claim")
+            failures.append(f"{where}: the figure(s) {', '.join(sorted(stray))} appear in no claim")
     return failures
 
 

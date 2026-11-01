@@ -133,15 +133,24 @@ def research(router, db, issue, copyable, fetcher=documents.fetch, max_steps=MAX
     chosen, gaps, finished = [], "", False
     first = {"action": "fetch", "item_id": issue["item_id"]}  # always needed, so code does it, not the model
     run.log.append(f"> {json.dumps(first)}\n{run.observe(first)}")
-    for step in range(1, max_steps + 1):
-        action, _ = router.complete_json("researcher", SYSTEM, run.render(step), validate_action, max_tokens=4096)
-        if action["action"] == "done":
-            chosen, gaps, finished = action["passages"], action.get("gaps", ""), True
-            break
-        observation = run.observe(action)
-        run.log.append(f"> {json.dumps(action)}\n{observation}")
-    else:
-        run.problems.append(f"stopped at the step limit ({max_steps}) without finishing")
+    try:
+        for step in range(1, max_steps + 1):
+            action, _ = router.complete_json("researcher", SYSTEM, run.render(step), validate_action, max_tokens=4096)
+            if action["action"] == "done":
+                chosen, gaps, finished = action["passages"], action.get("gaps", ""), True
+                break
+            observation = run.observe(action)
+            run.log.append(f"> {json.dumps(action)}\n{observation}")
+        else:
+            run.problems.append(f"stopped at the step limit ({max_steps}) without finishing")
+    except AllRoutesFailed as error:
+        # The model is the optional part: the main item was already read by code. Fall back to its own passages
+        # rather than fail the issue, and say so in the pack. If even the main item could not be read, fail loudly.
+        main = [pid for pid, (item, _) in run.shown.items() if item == issue["item_id"]]
+        if not main:
+            raise
+        chosen, gaps, finished = [f"P{pid}" for pid in main[:6]], "no background search: model unavailable", True
+        run.problems.append(f"researcher model unavailable, pack is the main item only: {str(error)[:100]}")
     picked, seen, invented = [], set(), False
     for ref in chosen:
         pid = _passage_id(ref)
@@ -201,7 +210,8 @@ def run_stage(router, store, copyable, count=3, fetcher=documents.fetch, out=sys
             store.db.execute("INSERT OR REPLACE INTO evidence_pack VALUES (?, ?, ?, ?)",
                              (issue["item_id"], json.dumps(pack), int(pack["complete"]), now()))
         complete += pack["complete"]
-        state = "complete" if pack["complete"] else "INCOMPLETE: " + "; ".join(pack["problems"])
+        notes = "; ".join(pack["problems"])
+        state = ("complete" + (f" (note: {notes})" if notes else "")) if pack["complete"] else "INCOMPLETE: " + notes
         print(f"item {issue['item_id']}: {len(pack['passages'])} passages, {state}", file=out)
     print(f"{complete}/{len(issues)} packs complete", file=out)
     if not issues:

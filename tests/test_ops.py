@@ -61,6 +61,18 @@ class CorrectionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             corrections.unpublish(store.db, 1, "again")  # no longer published
 
+    def test_requeue_wipes_a_held_issue_so_it_runs_again_and_refuses_others(self):
+        store = make_store()
+        seed(store, 1, "held")
+        seed(store, 2, "published")
+        corrections.requeue(store.db, 1)
+        for table in ("editorial", "draft"):
+            self.assertEqual(store.db.execute(f"SELECT COUNT(*) FROM {table} WHERE item_id = 1").fetchone()[0], 0)
+        self.assertEqual(store.db.execute("SELECT COUNT(*) FROM evidence_pack WHERE item_id = 1").fetchone()[0], 1)
+        for bad in (2, 99, 1):
+            with self.assertRaises(ValueError):
+                corrections.requeue(store.db, bad)
+
     def test_pause_start_is_idempotent_and_clears(self):
         store = make_store()
         self.assertIsNone(corrections.active_pause(store.db))

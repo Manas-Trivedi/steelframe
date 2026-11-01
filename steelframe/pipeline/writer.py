@@ -47,6 +47,9 @@ thin, write a shorter piece. Do not pad with invented background.
 - In the brief, editorial and deep dive, cite claims as [c1], [c2] right after the sentence they support. Every \
 number in those texts must come from a claim. The same measure carries the same figure everywhere.
 - You may add analysis (why it matters, trade-offs, a view) without a claim, but never new figures or facts in it.
+- This includes years, Article and Section numbers, counts and percentages you work out yourself. If a number is \
+not in a passage, leave it out. Do not round or convert a figure unless the claim itself states the rounded form.
+- A quote must be one unbroken stretch of a passage. Never join pieces, add words, or tidy up a table row.
 
 CONTENT
 - brief: 3 to 5 bullet strings, about 120 words in all.

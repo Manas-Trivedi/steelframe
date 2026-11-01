@@ -67,6 +67,16 @@ class CodeCheckTests(unittest.TestCase):
             with self.subTest(where):
                 self.assertEqual(len(checks.figure_check(draft)), 1)
 
+    def test_rounded_or_converted_amounts_count_as_the_same_figure(self):
+        draft = good_draft()
+        draft["brief"][0] = "The Centre released Rs 1.09 lakh crore [c1]."      # 1,09,019 crore rounded
+        draft["editorial"][0]["text"] += " About \u20b91.09 lakh crore went out."
+        self.assertEqual(checks.figure_check(draft), [])
+        draft["brief"][0] = "The Centre released Rs 1.2 lakh crore [c1]."       # 10% off: a different figure
+        self.assertEqual(len(checks.figure_check(draft)), 1)
+        draft["brief"][0] = "The Centre released Rs 1.09 crore [c1]."           # right digits, wrong unit
+        self.assertEqual(len(checks.figure_check(draft)), 1)
+
     def test_figure_in_option_text_is_allowed(self):
         draft = good_draft()
         draft["recall_questions"][0]["options"][0] = "Article 280"
