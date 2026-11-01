@@ -82,6 +82,17 @@ class UrlTests(unittest.TestCase):
         self.assertEqual(a, b)
 
 
+class StoreTests(unittest.TestCase):
+    def test_a_later_source_dates_an_item_stored_without_a_date_and_never_changes_a_date(self):
+        from steelframe.scout.feed import FeedItem
+        store = Store(":memory:")
+        store.add_items("PIB", [FeedItem("t", "https://x.test/a", None), FeedItem("u", "https://x.test/b", "2026-10-01")])
+        self.assertEqual(store.add_items("PIB", [FeedItem("t", "https://x.test/a", "2026-10-05"),
+                                                 FeedItem("u", "https://x.test/b", "2026-10-09")]), 0)
+        self.assertEqual(store.db.execute("SELECT url, published_at FROM item ORDER BY url").fetchall(),
+                         [("https://x.test/a", "2026-10-05"), ("https://x.test/b", "2026-10-01")])
+
+
 class RunTests(unittest.TestCase):
     sources = [{"id": "A", "url": "a"}, {"id": "B", "url": "b"}]
 

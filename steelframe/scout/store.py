@@ -54,7 +54,9 @@ class Store:
         self.db.commit()
 
     def add_items(self, source_id, items):
-        """Insert items that are not stored yet. Returns how many were new. Safe to repeat."""
+        """Insert items that are not stored yet. Returns how many were new. Safe to repeat.
+
+        An item stored without a date (the PIB feed gives none) gets the date when a later source supplies it."""
         new = 0
         with self.db:  # one transaction: a crash leaves no half-written batch
             for item in items:
@@ -64,4 +66,7 @@ class Store:
                     (source_id, canonical_url(item.link), item.title, item.published_at, now()),
                 )
                 new += cursor.rowcount
+                if not cursor.rowcount and item.published_at:
+                    self.db.execute("UPDATE item SET published_at = ? WHERE url = ? AND published_at IS NULL",
+                                    (item.published_at, canonical_url(item.link)))
         return new

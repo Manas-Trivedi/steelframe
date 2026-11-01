@@ -92,7 +92,7 @@ def triage_titles(router, titles, topics):
 def pending_items(db, limit):
     return db.execute(
         "SELECT id, title FROM item WHERE id NOT IN (SELECT item_id FROM triage)"
-        " ORDER BY published_at DESC, id DESC LIMIT ?", (limit,)).fetchall()
+        " ORDER BY COALESCE(published_at, fetched_at) DESC, id DESC LIMIT ?", (limit,)).fetchall()
 
 
 def run(router, store, topics, limit=200, out=sys.stdout):
@@ -122,7 +122,7 @@ def run(router, store, topics, limit=200, out=sys.stdout):
 def kept_with_links(db):
     """Kept items with their topic and how many past questions sit under the topic."""
     rows = db.execute("SELECT i.id, i.title, i.url, t.topic, t.relevance FROM triage t JOIN item i ON i.id = t.item_id"
-                      " WHERE t.relevance >= ? ORDER BY t.relevance DESC, i.published_at DESC", (KEEP_AT,)).fetchall()
+                      " WHERE t.relevance >= ? ORDER BY t.relevance DESC, COALESCE(i.published_at, i.fetched_at) DESC", (KEEP_AT,)).fetchall()
     return [(*row, len(past_questions(row[3]))) for row in rows]
 
 

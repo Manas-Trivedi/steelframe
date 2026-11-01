@@ -183,7 +183,7 @@ def select_issues(db, count, copyable):
     rows = db.execute(
         "SELECT i.id, i.source_id, i.title, t.topic, t.relevance FROM triage t JOIN item i ON i.id = t.item_id"
         " WHERE t.relevance >= ? AND i.id NOT IN (SELECT item_id FROM evidence_pack)"
-        " ORDER BY t.relevance DESC, i.published_at DESC, i.id DESC", (KEEP_AT,)).fetchall()
+        " ORDER BY t.relevance DESC, COALESCE(i.published_at, i.fetched_at) DESC, i.id DESC", (KEEP_AT,)).fetchall()
     issues, topics = [], set()
     for item_id, source_id, title, topic, relevance in rows:
         if topic in topics or len(issues) >= count or not copyable.get(source_id, False):

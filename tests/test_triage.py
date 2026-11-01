@@ -101,6 +101,13 @@ class RunTests(unittest.TestCase):
         self.assertEqual(store.db.execute("SELECT COUNT(*) FROM triage").fetchone()[0], 5)
         self.assertEqual(len(triage.pending_items(store.db, 100)), 25)
 
+    def test_undated_live_item_ranks_by_fetch_time_not_last(self):
+        store = Store(":memory:")
+        store.db.executescript(triage.SCHEMA)
+        store.add_items("PIB", [Item("archive", "https://x.test/old", "2026-10-20T00:00:00+00:00")])
+        store.add_items("PIB", [Item("live, undated", "https://x.test/new", None)])  # fetched now
+        self.assertEqual([t for _, t in triage.pending_items(store.db, 10)], ["live, undated", "archive"])
+
     def test_all_batches_failing_exits_2(self):
         store = store_with(3)
         router = FakeRouter(AllRoutesFailed("triage", ["down"]))
