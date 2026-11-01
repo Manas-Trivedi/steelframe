@@ -191,6 +191,13 @@ class StageTests(unittest.TestCase):
         store.db.execute("INSERT INTO evidence_pack VALUES (1, '{}', 1, 't')")
         self.assertEqual([i["item_id"] for i in researcher.select_issues(store.db, 5, COPYABLE)], [2])
 
+    def test_lane_keeps_only_fresh_or_only_archive_items(self):
+        store = make_store()
+        store.db.execute("UPDATE item SET published_at = '2026-09-01T00:00:00+00:00' WHERE id = 2")  # item 1 is undated: fresh
+        self.kept(store, [(1, 2, "G2.FED"), (2, 3, "G3.ECON")])
+        ids = lambda lane: [i["item_id"] for i in researcher.select_issues(store.db, 5, COPYABLE, lane)]
+        self.assertEqual((ids("fresh"), ids("archive"), ids(None)), ([1], [2], [2, 1]))
+
     def test_stage_saves_pack_and_reports(self):
         store = make_store()
         self.kept(store, [(1, 3, "G2.FED")])

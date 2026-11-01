@@ -2,7 +2,7 @@ import unittest
 
 from steelframe.pipeline import gate
 
-CONFIG = {"kill_switch": False, "daily_issue_cap": 3, "max_attempts": 3, "sensitive_topics": ["G2.RPA"]}
+CONFIG = {"kill_switch": False, "daily_issue_cap": 3, "backfill_issue_cap": 7, "monthly_issue_cap": 300, "max_attempts": 3, "sensitive_topics": ["G2.RPA"]}
 PASSING = {"passed": True, "total": 88, "scores": {"accuracy": 5}, "weaknesses": ["add data"]}
 FAILING = {"passed": False, "total": 61, "scores": {"accuracy": 4}, "weaknesses": ["rank the points"]}
 

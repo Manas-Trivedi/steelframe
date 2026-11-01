@@ -17,7 +17,7 @@ from ..llm.errors import AllRoutesFailed
 from ..scout.fetch import FetchFailed, FetchRejected
 from ..scout.store import Store, now
 from ..taxonomy import past_questions
-from . import documents
+from . import documents, lanes
 from .common import build_router
 from .triage import KEEP_AT
 
@@ -175,15 +175,18 @@ def research(router, db, issue, copyable, fetcher=documents.fetch, max_steps=MAX
             "complete": finished and main_read and not invented}
 
 
-def select_issues(db, count, copyable):
+def select_issues(db, count, copyable, lane=None):
     """The best kept items with no pack yet: highest relevance first, one per topic, newest first.
 
     Items from link-only sources are skipped: no passage can be kept, so no editorial can quote them.
+    `lane` ("fresh" or "archive") keeps only items of that lane, see lanes.py.
     """
+    lane_sql, lane_params = lanes.clause(lane)
     rows = db.execute(
         "SELECT i.id, i.source_id, i.title, t.topic, t.relevance FROM triage t JOIN item i ON i.id = t.item_id"
-        " WHERE t.relevance >= ? AND i.id NOT IN (SELECT item_id FROM evidence_pack)"
-        " ORDER BY t.relevance DESC, COALESCE(i.published_at, i.fetched_at) DESC, i.id DESC", (KEEP_AT,)).fetchall()
+        " WHERE t.relevance >= ? AND i.id NOT IN (SELECT item_id FROM evidence_pack) AND " + lane_sql +
+        " ORDER BY t.relevance DESC, COALESCE(i.published_at, i.fetched_at) DESC, i.id DESC",
+        (KEEP_AT, *lane_params)).fetchall()
     issues, topics = [], set()
     for item_id, source_id, title, topic, relevance in rows:
         if topic in topics or len(issues) >= count or not copyable.get(source_id, False):
@@ -194,10 +197,10 @@ def select_issues(db, count, copyable):
     return issues
 
 
-def run_stage(router, store, copyable, count=3, fetcher=documents.fetch, out=sys.stdout):
+def run_stage(router, store, copyable, count=3, fetcher=documents.fetch, out=sys.stdout, lane=None):
     store.db.executescript(SCHEMA)
     documents.ensure_schema(store.db)
-    issues = select_issues(store.db, count, copyable)
+    issues = select_issues(store.db, count, copyable, lane)
     complete = failed = 0
     for issue in issues:
         try:

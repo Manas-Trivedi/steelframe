@@ -15,14 +15,13 @@ import argparse
 import json
 import logging
 import sys
-from datetime import datetime, timezone
 
 from ..llm.errors import AllRoutesFailed
 from ..ops import corrections as ops_corrections
 from ..scout import run as scout_run
 from ..scout.store import Store, now
 from ..taxonomy import load_topics
-from . import fact_checker, gate, researcher, triage, writer
+from . import fact_checker, gate, lanes, researcher, triage, writer
 from .common import build_router
 from .examiner import examine
 
@@ -65,15 +64,18 @@ def ensure_schema(db):
     db.executescript(writer.SCHEMA + researcher.SCHEMA + SCHEMA)
 
 
-def decided_today(db):
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    return db.execute("SELECT COUNT(*) FROM editorial WHERE decided_at LIKE ?", (today + "%",)).fetchone()[0]
+def lane_room(db, config, lane):
+    """How many more issues the lane may decide today: its own daily cap, and what is left of the monthly cap."""
+    cap = config["daily_issue_cap" if lane == "fresh" else "backfill_issue_cap"]
+    return max(min(cap - lanes.decided_on_day(db, lane), config["monthly_issue_cap"] - lanes.decided_in_month(db)), 0)
 
 
-def waiting_packs(db, limit=None):
+def waiting_packs(db, limit=None, lane=None):
     """Complete evidence packs with no decision yet, oldest first."""
-    rows = db.execute("SELECT item_id, pack FROM evidence_pack WHERE complete = 1 AND item_id NOT IN"
-                      " (SELECT item_id FROM editorial) ORDER BY created_at, item_id").fetchall()
+    lane_sql, lane_params = lanes.clause(lane)
+    rows = db.execute("SELECT p.item_id, p.pack FROM evidence_pack p JOIN item i ON i.id = p.item_id"
+                      " WHERE p.complete = 1 AND p.item_id NOT IN (SELECT item_id FROM editorial) AND " + lane_sql +
+                      " ORDER BY p.created_at, p.item_id", lane_params).fetchall()
     return [(item_id, json.loads(pack)) for item_id, pack in rows][:limit]
 
 
@@ -172,12 +174,12 @@ def process_issue(router, db, item_id, pack, topics, copyable, config, out=sys.s
         return status
 
 
-def run_issues(router, store, topics, copyable, config, out=sys.stdout):
-    """Decide the waiting issues, up to the daily cap. Returns (published, held, failed, deferred)."""
+def run_issues(router, store, topics, copyable, config, out=sys.stdout, lane="fresh"):
+    """Decide the waiting issues of a lane, up to its daily cap. Returns (published, held, failed, deferred)."""
     ensure_schema(store.db)
-    room = config["daily_issue_cap"] - decided_today(store.db)
+    room = lane_room(store.db, config, lane)
     published = held = failed = deferred = 0
-    for item_id, pack in waiting_packs(store.db, max(room, 0)):
+    for item_id, pack in waiting_packs(store.db, room, lane):
         if not has_headroom(router):
             deferred += 1
             print(f"item {item_id}: deferred, free quota is used up for today", file=out)
@@ -210,9 +212,9 @@ def run(router, store, sources, topics, config, out=sys.stdout):
         return 1
     copyable = {s["id"]: bool(s.get("copy")) for s in sources}
     codes = [scout_run.run(sources, store, out=out), triage.run(router, store, topics, out=out)]
-    room = config["daily_issue_cap"] - decided_today(store.db)
-    queued = len(waiting_packs(store.db))
-    codes.append(researcher.run_stage(router, store, copyable, max(room - queued, 0), out=out))
+    room = lane_room(store.db, config, "fresh")
+    queued = len(waiting_packs(store.db, lane="fresh"))
+    codes.append(researcher.run_stage(router, store, copyable, max(room - queued, 0), out=out, lane="fresh"))
     published, held, failed, deferred = run_issues(router, store, topics, copyable, config, out)
     print(f"published {published}, held {held}, failed {failed}, deferred {deferred}; model calls this run: {router.calls}",
           file=out)

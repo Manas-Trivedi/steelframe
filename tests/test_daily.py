@@ -16,7 +16,7 @@ from tests.test_writer import good_draft, pack
 Result = namedtuple("Result", "provider model")
 TOPICS = load_topics()
 COPYABLE = {"PIB": True}
-CONFIG = {"kill_switch": False, "daily_issue_cap": 3, "max_attempts": 3, "sensitive_topics": ["G2.RPA"]}
+CONFIG = {"kill_switch": False, "daily_issue_cap": 3, "backfill_issue_cap": 7, "monthly_issue_cap": 300, "max_attempts": 3, "sensitive_topics": ["G2.RPA"]}
 
 
 class ScriptedRouter:
@@ -142,6 +142,27 @@ class RunIssuesTests(unittest.TestCase):
         router = ScriptedRouter(writer=[good_draft()] * 3, fact_checker=[verdicts()] * 3, examiner=[reply(4)] * 3)
         self.assertEqual(self.run_issues(router, store, {**CONFIG, "daily_issue_cap": 2}), (2, 0, 0, 0))
         self.assertEqual(self.run_issues(router, store, {**CONFIG, "daily_issue_cap": 2}), (0, 0, 0, 0))  # cap used
+
+    def age(self, store, *item_ids):
+        for item_id in item_ids:
+            store.db.execute("UPDATE item SET published_at = '2026-09-01T00:00:00+00:00' WHERE id = ?", (item_id,))
+
+    def test_lanes_have_their_own_caps_and_only_decide_their_own_items(self):
+        store = make_store(n=4)
+        self.age(store, 3, 4)  # items 3 and 4 are archive, 1 and 2 are fresh
+        router = ScriptedRouter(writer=[good_draft()] * 4, fact_checker=[verdicts()] * 4, examiner=[reply(4)] * 4)
+        config = {**CONFIG, "daily_issue_cap": 1, "backfill_issue_cap": 2}
+        run = lambda lane: daily.run_issues(router, store, TOPICS, COPYABLE, config, io.StringIO(), lane=lane)
+        self.assertEqual(run("fresh"), (1, 0, 0, 0))
+        self.assertEqual(run("archive"), (2, 0, 0, 0))
+        self.assertEqual(sorted(r[0] for r in rows(store, "SELECT item_id FROM editorial")), [1, 3, 4])
+
+    def test_monthly_cap_stops_both_lanes(self):
+        store = make_store(n=3)
+        router = ScriptedRouter(writer=[good_draft()] * 3, fact_checker=[verdicts()] * 3, examiner=[reply(4)] * 3)
+        config = {**CONFIG, "daily_issue_cap": 5, "monthly_issue_cap": 2}
+        self.assertEqual(self.run_issues(router, store, config), (2, 0, 0, 0))
+        self.assertEqual(self.run_issues(router, store, config), (0, 0, 0, 0))
 
     def test_no_quota_defers_instead_of_rushing(self):
         store, router = make_store(), ScriptedRouter()
