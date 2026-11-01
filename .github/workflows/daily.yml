@@ -6,6 +6,16 @@ on:
   schedule:
     - cron: "30 0 * * *"   # 06:00 India time
   workflow_dispatch:
+    inputs:
+      stage:
+        description: "daily = the whole run. triage = only score unseen items (for the backfill), nothing is written or published"
+        type: choice
+        options: [daily, triage]
+        default: daily
+      limit:
+        description: "triage only: how many unseen items to score, newest first, 25 per model call"
+        type: number
+        default: 200
 
 permissions:
   contents: write
@@ -43,13 +53,23 @@ jobs:
         run: python3 -m unittest discover -s tests -t .
       - name: Daily run
         id: daily
+        if: ${{ inputs.stage != 'triage' }}   # a scheduled run has no inputs, so it runs the daily stage
         run: python3 -m steelframe.pipeline.daily
         continue-on-error: true   # exit 1 means something was held or deferred: still save and publish what finished
+      - name: Triage only
+        id: triage
+        if: ${{ inputs.stage == 'triage' }}
+        env:
+          LIMIT: ${{ inputs.limit }}
+        run: python3 -m steelframe.pipeline.triage --limit "$LIMIT"
+        continue-on-error: true   # exit 1 means a batch failed: still save what was scored
       - name: Audit
         id: audit
+        if: ${{ inputs.stage != 'triage' }}
         run: python3 -m steelframe.ops.audit run
         continue-on-error: true
       - name: Build the site
+        if: ${{ inputs.stage != 'triage' }}
         run: python3 -m steelframe.site.build
       - name: Save the database to the state branch
         run: |
@@ -68,11 +88,13 @@ jobs:
           git commit -m "state $(date -u +%F)" || echo "no change to save"
           git push origin state
       - uses: actions/upload-pages-artifact@v3
+        if: ${{ inputs.stage != 'triage' }}
         with:
           path: site/dist
       - uses: actions/deploy-pages@v4
+        if: ${{ inputs.stage != 'triage' }}
       - name: Fail the job if the run needs attention
-        if: ${{ steps.daily.outcome == 'failure' || steps.audit.outcome == 'failure' }}
+        if: ${{ steps.daily.outcome == 'failure' || steps.triage.outcome == 'failure' || steps.audit.outcome == 'failure' }}
         run: |
           echo "The daily run or the audit exited non-zero: something was held, deferred, failed or the alarm is on. Read the logs above." >&2
           exit 1
