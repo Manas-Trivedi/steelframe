@@ -46,9 +46,12 @@ def page(site, title, body, root="", description=""):
 """
 
 
+ARCHIVE_TAG = " · From the archive"
+
+
 def issue_card(e, root=""):
     return f"""<article class="card">
-  <p class="meta">{esc(e['date'])} · {esc(e['topic_name'])} · about {e['minutes']['editorial']} min</p>
+  <p class="meta">{esc(e['date'])} · {esc(e['topic_name'])} · about {e['minutes']['editorial']} min{ARCHIVE_TAG if e['archive'] else ""}</p>
   <h2><a href="{esc(root)}p/{esc(e['slug'])}.html">{esc(e['title'])}</a></h2>
   <p class="lead">{esc(_plain(e['draft']['brief'][0]))}</p>
   <p class="meter" aria-label="Relevance {e['relevance']} of 3"><span style="width:{e['relevance'] * 33.3:.0f}%"></span></p>
@@ -103,7 +106,7 @@ def editorial_page(site, e, past_links):
     meta = {"slug": e["slug"], "title": e["title"], "date": e["date"], "topic": e["topic"]}
     body = f"""{corrections}
 <article class="piece" data-meta="{esc(json_for_script(meta))}">
-  <p class="meta">{esc(e['date'])} · {esc(e['topic_name'])}</p>
+  <p class="meta">{esc(e['date'])} · {esc(e['topic_name'])}{ARCHIVE_TAG if e['archive'] else ""}</p>
   <h1>{esc(draft['title'])}</h1>
   <div class="depths" role="group" aria-label="Reading depth">
     <button type="button" data-depth="brief">Brief <small>{e['minutes']['brief']} min</small></button>

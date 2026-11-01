@@ -14,7 +14,8 @@ import sys
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-from ..pipeline import daily, triage
+from ..pipeline import daily, lanes, triage
+from ..scout.feed import IST
 from ..scout.store import Store
 from ..taxonomy import load_topics, past_questions
 from . import pages
@@ -28,23 +29,39 @@ def load_published(db, topics):
     """Published editorials, newest first, each with its draft, evidence pack and score."""
     names = {t["id"]: t["name"] for t in topics}
     rows = db.execute(
-        "SELECT e.item_id, e.decided_at, e.draft_attempt, d.draft, p.pack, t.relevance"
+        "SELECT e.item_id, e.decided_at, e.draft_attempt, d.draft, p.pack, t.relevance, i.published_at"
         " FROM editorial e JOIN draft d ON d.item_id = e.item_id AND d.attempt = e.draft_attempt"
         " JOIN evidence_pack p ON p.item_id = e.item_id LEFT JOIN triage t ON t.item_id = e.item_id"
-        " WHERE e.status = 'published' ORDER BY e.decided_at DESC, e.item_id DESC").fetchall()
+        " JOIN item i ON i.id = e.item_id WHERE e.status = 'published'").fetchall()
     corrections = load_corrections(db)
     out = []
-    for item_id, decided_at, _, draft_json, pack_json, relevance in rows:
+    for item_id, decided_at, _, draft_json, pack_json, relevance, published_at in rows:
         draft = json.loads(draft_json)
         brief, editorial, deep = depth_texts(draft)
-        date = decided_at[:10]
+        slug_date = decided_at[:10]  # the address must not change when a piece is dated by its source
+        date, archive = _source_date(published_at, decided_at)
         out.append({
-            "item_id": item_id, "date": date, "slug": f"{date}-{item_id}-{slugify(draft['title'])}",
+            "item_id": item_id, "date": date, "archive": archive,
+            "slug": f"{slug_date}-{item_id}-{slugify(draft['title'])}",
             "title": draft["title"], "topic": draft["topic"], "topic_name": names.get(draft["topic"], draft["topic"]),
             "draft": draft, "pack": json.loads(pack_json), "relevance": relevance or 2,
             "minutes": {"brief": read_minutes(brief), "editorial": read_minutes(editorial), "deep": read_minutes(deep)},
             "corrections": corrections.get(item_id, [])})
+    out.sort(key=lambda e: (e["date"], e["item_id"]), reverse=True)
     return out
+
+
+def _source_date(published_at, decided_at):
+    """(date shown, from the archive?). A piece is dated by its source (in India), or by the day it was decided
+    when the source gives no date. It is an archive piece if the source is older than the fresh window."""
+    if not published_at:
+        return decided_at[:10], False
+    published = datetime.fromisoformat(published_at)
+    decided = datetime.fromisoformat(decided_at)
+    if decided.tzinfo is None:
+        decided = decided.replace(tzinfo=timezone.utc)
+    return (published.astimezone(IST).strftime("%Y-%m-%d"),
+            published < decided - timedelta(days=lanes.FRESH_DAYS))
 
 
 def load_corrections(db):

@@ -92,6 +92,20 @@ class BuildTests(unittest.TestCase):
     def read(self, name):
         return open(os.path.join(self.out, name), encoding="utf-8").read()
 
+    def test_archive_piece_is_dated_by_its_source_tagged_and_keeps_a_stable_address(self):
+        store = make_store()
+        seed(store, 1, "published")  # undated item: shown by the day it was decided, not tagged
+        seed(store, 2, "published", title="Old news")
+        store.db.execute("UPDATE item SET published_at = '2026-10-14T18:30:00+00:00' WHERE id = 2")  # 15 Oct in India
+        self.build(store)
+        pieces = {e["item_id"]: e for e in build.load_published(store.db, TOPICS)}
+        self.assertEqual((pieces[1]["date"], pieces[1]["archive"]), ("2026-11-01", False))
+        self.assertEqual((pieces[2]["date"], pieces[2]["archive"]), ("2026-10-15", True))
+        self.assertTrue(pieces[2]["slug"].startswith("2026-11-01-2-"))  # address uses the decision day
+        self.assertEqual([e["item_id"] for e in build.load_published(store.db, TOPICS)], [1, 2])  # newest source date first
+        self.assertEqual(self.read("index.html").count("From the archive"), 1)
+        self.assertTrue(os.path.exists(os.path.join(self.out, "m", "2026-10.html")))
+
     def test_published_pieces_get_pages_and_held_ones_do_not(self):
         store = make_store()
         seed(store, 1, "published")
