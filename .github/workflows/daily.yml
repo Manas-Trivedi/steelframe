@@ -8,14 +8,18 @@ on:
   workflow_dispatch:
     inputs:
       stage:
-        description: "daily = the whole run. triage = only score unseen items (for the backfill), nothing is written or published"
+        description: "daily = the whole run. triage = only score unseen items. backfill = write and publish archive issues (run triage first)"
         type: choice
-        options: [daily, triage]
+        options: [daily, triage, backfill]
         default: daily
       limit:
         description: "triage only: how many unseen items to score, newest first, 25 per model call"
         type: number
         default: 200
+      count:
+        description: "backfill only: most issues to decide in this run (the daily and monthly caps in config/gate.json still apply)"
+        type: number
+        default: 10
 
 permissions:
   contents: write
@@ -52,7 +56,7 @@ jobs:
         run: python3 -m unittest discover -s tests -t .
       - name: Daily run
         id: daily
-        if: ${{ inputs.stage != 'triage' }}   # a scheduled run has no inputs, so it runs the daily stage
+        if: ${{ inputs.stage != 'triage' && inputs.stage != 'backfill' }}   # a scheduled run has no inputs, so it runs this
         run: python3 -m steelframe.pipeline.daily
         continue-on-error: true   # exit 1 means something was held or deferred: still save and publish what finished
       - name: Triage only
@@ -62,6 +66,13 @@ jobs:
           LIMIT: ${{ inputs.limit }}
         run: python3 -m steelframe.pipeline.triage --limit "$LIMIT"
         continue-on-error: true   # exit 1 means a batch failed: still save what was scored
+      - name: Backfill
+        id: backfill
+        if: ${{ inputs.stage == 'backfill' }}
+        env:
+          COUNT: ${{ inputs.count }}
+        run: python3 -m steelframe.pipeline.backfill --count "$COUNT"
+        continue-on-error: true   # exit 1 means something was held or deferred: still save and publish what finished
       - name: Audit
         id: audit
         if: ${{ inputs.stage != 'triage' }}
@@ -93,7 +104,7 @@ jobs:
       - uses: actions/deploy-pages@v4
         if: ${{ inputs.stage != 'triage' }}
       - name: Fail the job if the run needs attention
-        if: ${{ steps.daily.outcome == 'failure' || steps.triage.outcome == 'failure' || steps.audit.outcome == 'failure' }}
+        if: ${{ steps.daily.outcome == 'failure' || steps.triage.outcome == 'failure' || steps.backfill.outcome == 'failure' || steps.audit.outcome == 'failure' }}
         run: |
           echo "The daily run or the audit exited non-zero: something was held, deferred, failed or the alarm is on. Read the logs above." >&2
           exit 1
