@@ -76,6 +76,10 @@
       [
         "openrouter",
         "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ],
+      [
+        "groq",
+        "openai/gpt-oss-120b"
       ]
     ],
     "fact_checker": [

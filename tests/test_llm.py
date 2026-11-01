@@ -127,6 +127,36 @@ class RouterTests(unittest.TestCase):
         router.complete_json("triage", "s", "u")
         self.assertEqual(a.calls, 2)
 
+    def test_waits_once_when_every_route_is_only_rate_limited(self):
+        a = Stub("a", RateLimited("429", 20), ok("a"))
+        waits = []
+        router = self.make([a])
+        router.sleep = lambda seconds: (waits.append(seconds), self.now.__setitem__(0, self.now[0] + seconds))
+        parsed, result = router.complete_json("triage", "s", "u")
+        self.assertEqual(waits, [21])
+        self.assertEqual((parsed, a.calls), ({"a": 1}, 2))
+
+    def test_does_not_wait_longer_than_max_wait(self):
+        a = Stub("a", RateLimited("429", 600))
+        router = self.make([a])
+        router.sleep = lambda seconds: self.fail("must not wait for a long rate limit")
+        with self.assertRaises(AllRoutesFailed):
+            router.complete_json("triage", "s", "u")
+
+    def test_does_not_wait_when_a_route_failed_for_a_real_reason(self):
+        a, b = Stub("a", RateLimited("429", 20)), Stub("b", Rejected("400"))
+        router = self.make([a, b])
+        router.sleep = lambda seconds: self.fail("a bad request cannot be fixed by waiting")
+        with self.assertRaises(AllRoutesFailed):
+            router.complete_json("triage", "s", "u")
+
+    def test_exclude_skips_a_provider_entirely(self):
+        a, b = Stub("a", ok("a")), Stub("b", ok("b"))
+        parsed, result = self.make([a, b]).complete_json("triage", "s", "u", exclude=("a",))
+        self.assertEqual((a.calls, result.provider), (0, "b"))
+        with self.assertRaises(AllRoutesFailed):
+            self.make([Stub("a", ok("a"))]).complete_json("triage", "s", "u", exclude=("a",))
+
     def test_server_error_is_retried_once_then_next_provider(self):
         a, b = Stub("a", Unavailable("503"), Unavailable("503")), Stub("b", ok("b"))
         self.make([a, b]).complete_json("triage", "s", "u")
