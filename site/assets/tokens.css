@@ -1,0 +1,66 @@
+/* Design tokens. Values and reasons: docs/design/DESIGN_LANGUAGE.md. Contrast is tested in tests/test_design.py.
+   The dark values appear twice (device setting, and the manual override); the test keeps them equal. */
+:root {
+  --bg: #faf8f3;
+  --surface: #ffffff;
+  --ink: #1c1b19;
+  --muted: #5b574f;
+  --line: #e3ded3;
+  --accent: #1f3a5f;
+  --highlight: #ffe9a8;
+  --good: #1e6b3a;
+  --bad: #a12b2b;
+
+  --font-body: "Iowan Old Style", "Charter", "Palatino Linotype", Georgia, serif;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --step--1: 0.833rem;
+  --step-0: 1.1875rem;
+  --step-1: 1.425rem;
+  --step-2: 1.71rem;
+  --step-3: 2.05rem;
+  --leading: 1.65;
+  --measure: 66ch;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2.5rem;
+
+  --radius: 6px;
+  --fast: 120ms;
+  --base: 200ms;
+  --slow: 320ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131211;
+    --surface: #1c1b19;
+    --ink: #ece8df;
+    --muted: #a8a298;
+    --line: #34312c;
+    --accent: #9dbce8;
+    --highlight: #4a3d0c;
+    --good: #7fcf9a;
+    --bad: #f08c8c;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #131211;
+  --surface: #1c1b19;
+  --ink: #ece8df;
+  --muted: #a8a298;
+  --line: #34312c;
+  --accent: #9dbce8;
+  --highlight: #4a3d0c;
+  --good: #7fcf9a;
+  --bad: #f08c8c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --fast: 0ms; --base: 0ms; --slow: 0ms; }
+}
