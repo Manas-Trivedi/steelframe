@@ -15,6 +15,7 @@ class Router:
         """routes: {stage: [(provider_name, model), ...]} in order of preference."""
         self.providers, self.routes, self.quota = providers, routes, quota
         self.sleep, self.clock, self.max_wait = sleep, clock, max_wait
+        self.calls = 0  # model calls made through this router, successful or not, for per-issue counts
         self.cooldown = {}  # provider -> time before which it is skipped
         self.disabled = {}  # provider -> reason (bad or missing key), skipped for this process
         self.closed_routes = {}  # (provider, model) -> reason (403 on one model), skipped for this process
@@ -100,10 +101,12 @@ class Router:
 
     def _call(self, provider_name, model, system, user, max_tokens):
         provider = self.providers[provider_name]
+        self.calls += 1
         try:
             return provider.complete(model, system, user, True, max_tokens)
         except Unavailable:
             self.sleep(2)  # one retry for a server error or network blip, then move on
+            self.calls += 1
             return provider.complete(model, system, user, True, max_tokens)
 
     @staticmethod
