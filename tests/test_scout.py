@@ -109,6 +109,13 @@ class RunTests(unittest.TestCase):
         run(self.sources, store, fetcher=lambda u: responses[u](), out=io.StringIO())
         self.assertEqual(store.db.execute("select count(*) from item").fetchone()[0], 3)
 
+    def test_hindi_items_are_skipped_and_counted(self):
+        hindi = RSS.replace(b"<title>Two</title>", "<title>ईपीएफओ कल अपना स्थापना दिवस मनाएगा</title>".encode())
+        code, store, _ = self.go({"a": lambda: hindi, "b": lambda: ATOM})
+        self.assertEqual(code, 0)
+        self.assertEqual(sorted(t for (t,) in store.db.execute("select title from item")), ["A", "One"])
+        self.assertEqual(store.db.execute("select items_skipped from source_run where source_id = 'A'").fetchone()[0], 3)
+
     def test_one_failing_source_does_not_hide_the_other(self):
         def boom():
             raise FetchRejected("403")

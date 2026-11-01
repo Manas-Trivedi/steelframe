@@ -7,6 +7,7 @@ A non-zero exit lets the scheduler alert, so an outage is never reported as a qu
 """
 import argparse
 import json
+import re
 import sys
 
 from .feed import FeedError, parse_feed
@@ -14,12 +15,17 @@ from .fetch import FetchFailed, FetchRejected, fetch
 from .store import Store
 
 
+DEVANAGARI = re.compile(r"[\u0900-\u097F]")  # the PIB English feed also carries Hindi releases; the product is English only
+
+
 def scout_source(source, store, fetcher=fetch):
     """Fetch one source and store its items. Returns (status, found, new, error)."""
     run_id = store.start_run(source["id"])
     try:
         items, skipped = parse_feed(fetcher(source["url"]))
-        new = store.add_items(source["id"], items)
+        english = [i for i in items if not DEVANAGARI.search(i.title)]
+        skipped += len(items) - len(english)
+        new = store.add_items(source["id"], english)
     except (FetchRejected, FetchFailed, FeedError) as error:
         store.finish_run(run_id, "failed", error=str(error))
         return "failed", 0, 0, str(error)
