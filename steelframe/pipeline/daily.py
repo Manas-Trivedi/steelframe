@@ -15,6 +15,7 @@ import argparse
 import json
 import logging
 import sys
+import time
 
 from ..llm.errors import AllRoutesFailed
 from ..ops import corrections as ops_corrections
@@ -64,10 +65,14 @@ def ensure_schema(db):
     db.executescript(writer.SCHEMA + researcher.SCHEMA + SCHEMA)
 
 
-def lane_room(db, config, lane):
-    """How many more issues the lane may decide today: its own daily cap, and what is left of the monthly cap."""
-    cap = config["daily_issue_cap" if lane == "fresh" else "backfill_issue_cap"]
-    return max(min(cap - lanes.decided_on_day(db, lane), config["monthly_issue_cap"] - lanes.decided_in_month(db)), 0)
+def fresh_room(db, config):
+    """How many more fresh issues may be decided today: the daily cap and what is left of the monthly cap.
+
+    The archive backfill has no cap of its own (it is bounded by days and per-day count, see backfill.py) and is not
+    counted here, so it can never use up the day's news slots.
+    """
+    return max(min(config["daily_issue_cap"] - lanes.decided_on_day(db, "fresh"),
+                   config["monthly_issue_cap"] - lanes.decided_in_month(db, "fresh")), 0)
 
 
 def waiting_packs(db, limit=None, lane=None):
@@ -174,13 +179,24 @@ def process_issue(router, db, item_id, pack, topics, copyable, config, out=sys.s
         return status
 
 
-def run_issues(router, store, topics, copyable, config, out=sys.stdout, lane="fresh", limit=None):
-    """Decide the waiting issues of a lane, up to its daily cap. Returns (published, held, failed, deferred)."""
+def run_issues(router, store, topics, copyable, config, out=sys.stdout, lane="fresh", limit=None, deadline=None):
+    """Decide the waiting issues of a lane. Returns (published, held, failed, deferred).
+
+    The fresh lane stops at its daily and monthly caps. The archive lane stops at `limit`, and, like both lanes, at
+    `deadline` (a time.monotonic() value): later issues wait for the next run, so a job is never killed mid-save.
+    """
     ensure_schema(store.db)
-    room = lane_room(store.db, config, lane)
-    room = room if limit is None else min(room, limit)
+    if lane == "fresh":
+        room = fresh_room(store.db, config)
+        room = room if limit is None else min(room, limit)
+    else:
+        room = limit or 0
     published = held = failed = deferred = 0
     for item_id, pack in waiting_packs(store.db, room, lane):
+        if deadline is not None and time.monotonic() > deadline:
+            deferred += 1
+            print(f"item {item_id}: deferred, out of time for this run", file=out)
+            continue
         if not has_headroom(router):
             deferred += 1
             print(f"item {item_id}: deferred, free quota is used up for today", file=out)
@@ -221,7 +237,7 @@ def run(router, store, sources, topics, config, out=sys.stdout):
         return code
     copyable = {s["id"]: bool(s.get("copy")) for s in sources}
     codes = [scout_run.run(sources, store, out=out), triage.run(router, store, topics, out=out)]
-    room = lane_room(store.db, config, "fresh")
+    room = fresh_room(store.db, config)
     queued = len(waiting_packs(store.db, lane="fresh"))
     codes.append(researcher.run_stage(router, store, copyable, max(room - queued, 0), out=out, lane="fresh"))
     published, held, failed, deferred = run_issues(router, store, topics, copyable, config, out)

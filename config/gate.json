@@ -1,8 +1,9 @@
 {
   "kill_switch": false,
   "daily_issue_cap": 3,
-  "backfill_issue_cap": 7,
   "monthly_issue_cap": 300,
+  "backfill_per_day": 10,
+  "backfill_days": 29,
   "max_attempts": 3,
   "sensitive_topics": ["G2.SEP", "G2.EXEC", "G1.EMP", "G2.RPA"]
 }

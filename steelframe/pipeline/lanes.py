@@ -5,6 +5,8 @@ An item's date is its source date, or the time Scout fetched it when the source 
 """
 from datetime import datetime, timedelta, timezone
 
+from ..scout.feed import IST
+
 FRESH_DAYS = 3
 ITEM_DATE = "COALESCE(i.published_at, i.fetched_at)"
 
@@ -29,9 +31,19 @@ def decided_on_day(db, lane=None, now=None):
     return _decided(db, lane, now.strftime("%Y-%m-%d"))
 
 
-def decided_in_month(db, now=None):
+def decided_in_month(db, lane=None, now=None):
     now = now or datetime.now(timezone.utc)
-    return _decided(db, None, now.strftime("%Y-%m"))
+    return _decided(db, lane, now.strftime("%Y-%m"))
+
+
+def since(days, now=None):
+    """Items dated at or after this are within `days` days back."""
+    return ((now or datetime.now(timezone.utc)) - timedelta(days=days)).isoformat()
+
+
+def source_day(published_at, fetched_at):
+    """The Indian calendar day of an item's source date (its fetch time when the source gives none)."""
+    return datetime.fromisoformat(published_at or fetched_at).astimezone(IST).strftime("%Y-%m-%d")
 
 
 def _decided(db, lane, prefix):

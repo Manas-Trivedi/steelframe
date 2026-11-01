@@ -36,7 +36,7 @@ class LaneTests(unittest.TestCase):
         store = store_with(("2026-10-10T00:00:00+00:00", "2026-11-01T06:00:00+00:00"),
                            ("2026-10-10T00:00:00+00:00", "2026-10-31T06:00:00+00:00"))
         self.assertEqual(lanes.decided_on_day(store.db, "archive", NOW), 0)
-        self.assertEqual(lanes.decided_in_month(store.db, NOW), 1)
+        self.assertEqual(lanes.decided_in_month(store.db, None, NOW), 1)
 
 
 if __name__ == "__main__":

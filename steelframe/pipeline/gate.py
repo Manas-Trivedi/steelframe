@@ -16,7 +16,7 @@ CONFIG = "config/gate.json"
 def load_config(path=CONFIG):
     with open(path) as f:
         config = json.load(f)
-    for key in ("kill_switch", "daily_issue_cap", "backfill_issue_cap", "monthly_issue_cap", "max_attempts", "sensitive_topics"):
+    for key in ("kill_switch", "daily_issue_cap", "monthly_issue_cap", "backfill_per_day", "backfill_days", "max_attempts", "sensitive_topics"):
         if key not in config:
             raise ValueError(f"{path}: missing '{key}'")
     return config

@@ -175,32 +175,51 @@ def research(router, db, issue, copyable, fetcher=documents.fetch, max_steps=MAX
             "complete": finished and main_read and not invented}
 
 
-def select_issues(db, count, copyable, lane=None):
+def select_issues(db, count, copyable, lane=None, per_day=None, days=None):
     """The best kept items with no pack yet: highest relevance first, one per topic, newest first.
 
     Items from link-only sources are skipped: no passage can be kept, so no editorial can quote them.
-    `lane` ("fresh" or "archive") keeps only items of that lane, see lanes.py.
+    `lane` ("fresh" or "archive") keeps only items of that lane, see lanes.py. `days` keeps only items dated within
+    that many days back, and `per_day` stops a release day from getting more than that many issues (counting the
+    complete packs it already has), so a backfill spreads over the days instead of piling onto the best ones.
     """
     lane_sql, lane_params = lanes.clause(lane)
+    if days is not None:
+        lane_sql += f" AND {lanes.ITEM_DATE} >= ?"
+        lane_params = (*lane_params, lanes.since(days))
+    taken, topics = {}, set()
+    if per_day is not None:  # a backfill: one issue per topic per release day, not per batch
+        for published_at, fetched_at, topic in db.execute(
+                "SELECT i.published_at, i.fetched_at, t.topic FROM evidence_pack p JOIN item i ON i.id = p.item_id"
+                " LEFT JOIN triage t ON t.item_id = p.item_id WHERE p.complete = 1"):
+            day = lanes.source_day(published_at, fetched_at)
+            taken[day] = taken.get(day, 0) + 1
+            topics.add((day, topic))
     rows = db.execute(
-        "SELECT i.id, i.source_id, i.title, t.topic, t.relevance FROM triage t JOIN item i ON i.id = t.item_id"
+        "SELECT i.id, i.source_id, i.title, t.topic, t.relevance, i.published_at, i.fetched_at FROM triage t JOIN item i ON i.id = t.item_id"
         " WHERE t.relevance >= ? AND i.id NOT IN (SELECT item_id FROM evidence_pack) AND " + lane_sql +
         " ORDER BY t.relevance DESC, COALESCE(i.published_at, i.fetched_at) DESC, i.id DESC",
         (KEEP_AT, *lane_params)).fetchall()
-    issues, topics = [], set()
-    for item_id, source_id, title, topic, relevance in rows:
-        if topic in topics or len(issues) >= count or not copyable.get(source_id, False):
+    issues = []
+    for item_id, source_id, title, topic, relevance, published_at, fetched_at in rows:
+        day = lanes.source_day(published_at, fetched_at)
+        key = (day, topic) if per_day is not None else topic
+        if key in topics or len(issues) >= count or not copyable.get(source_id, False):
             continue
-        topics.add(topic)
+        if per_day is not None and taken.get(day, 0) >= per_day:
+            continue
+        taken[day] = taken.get(day, 0) + 1
+        topics.add(key)
         issues.append({"item_id": item_id, "source_id": source_id, "title": title, "topic": topic,
                        "relevance": relevance, "past_questions": len(past_questions(topic))})
     return issues
 
 
-def run_stage(router, store, copyable, count=3, fetcher=documents.fetch, out=sys.stdout, lane=None):
+def run_stage(router, store, copyable, count=3, fetcher=documents.fetch, out=sys.stdout, lane=None, per_day=None,
+              days=None):
     store.db.executescript(SCHEMA)
     documents.ensure_schema(store.db)
-    issues = select_issues(store.db, count, copyable, lane)
+    issues = select_issues(store.db, count, copyable, lane, per_day, days)
     complete = failed = 0
     for issue in issues:
         try:

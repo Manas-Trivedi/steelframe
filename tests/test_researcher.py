@@ -198,6 +198,23 @@ class StageTests(unittest.TestCase):
         ids = lambda lane: [i["item_id"] for i in researcher.select_issues(store.db, 5, COPYABLE, lane)]
         self.assertEqual((ids("fresh"), ids("archive"), ids(None)), ([1], [2], [2, 1]))
 
+    def test_per_day_spreads_issues_over_release_days_and_days_limits_the_window(self):
+        from datetime import datetime, timedelta, timezone
+        ago = lambda d: (datetime.now(timezone.utc) - timedelta(days=d)).replace(hour=6).isoformat()
+        store = Store(":memory:")
+        store.add_items("PIB", [FeedItem(f"a{n}", f"https://pib.test/{n}", ago(d)) for n, d in
+                                enumerate([5, 5, 5, 5, 4, 4, 40], 1)])
+        documents.ensure_schema(store.db)
+        store.db.executescript(researcher.SCHEMA)
+        self.kept(store, [(1, 3, "T1"), (2, 3, "T2"), (3, 3, "T3"), (4, 3, "T1"), (5, 2, "T1"), (6, 2, "T2"),
+                          (7, 3, "T9")])
+        pick = lambda **kw: [i["item_id"] for i in researcher.select_issues(store.db, 99, COPYABLE, per_day=2, **kw)]
+        # day A (items 1-4): two of four, newest id first, never T1 twice; day B: both; 40 days back: one
+        self.assertEqual(pick(), [4, 3, 7, 6, 5])
+        self.assertEqual(pick(days=29), [4, 3, 6, 5])  # the 40-day-old item is outside the window
+        store.db.execute("INSERT INTO evidence_pack VALUES (3, '{}', 1, 't')")  # a done pack counts toward its day
+        self.assertEqual(pick(days=29), [4, 6, 5])  # day A has one slot left, and item 4 takes it
+
     def test_stage_saves_pack_and_reports(self):
         store = make_store()
         self.kept(store, [(1, 3, "G2.FED")])
