@@ -31,8 +31,9 @@ def good_draft():
                       for i in range(1, 6)],
         "mains_question": {"question": "Discuss the role of tax devolution in fiscal federalism.",
                            "approach": ["Define", "Finance Commission", "Issues", "Way forward"]},
-        "recall_questions": [{"question": f"Which body decides devolution, question {i}?", "options": ["A", "B", "C", "D"],
-                              "answer": 1, "explanation": "Because of the Constitution."} for i in range(3)],
+        "recall_questions": [{"question": f"Which body decides devolution, {word} version?", "options": ["A", "B", "C", "D"],
+                              "answer": 1, "explanation": "Because of the Constitution."}
+                             for word in ("first", "second", "third")],
     }
 
 

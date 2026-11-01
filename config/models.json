@@ -90,6 +90,10 @@
       [
         "openrouter",
         "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ],
+      [
+        "gemini",
+        "gemini-3-flash-preview"
       ]
     ],
     "examiner": [
@@ -100,6 +104,10 @@
       [
         "openrouter",
         "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ],
+      [
+        "gemini",
+        "gemini-3-flash-preview"
       ]
     ]
   },

@@ -11,16 +11,15 @@ Exit code: 0 every draft written, 1 some failed (retried next run), 2 none could
 import argparse
 import json
 import logging
-import re
 import sys
 
 from ..llm.errors import AllRoutesFailed
 from ..scout.store import Store, now
 from ..taxonomy import load_topics
+from .checks import cited_ids
 from .common import build_router
 
 log = logging.getLogger("steelframe.writer")
-MARKER = re.compile(r"\[c(\d+)\]")
 MAX_TOKENS = 16000  # reasoning models spend part of this thinking before the JSON starts
 
 SCHEMA = """
@@ -71,7 +70,7 @@ def _text(value, name, minimum=1):
 
 
 def _cited(text, claim_ids, where):
-    markers = {int(m) for m in MARKER.findall(text)}
+    markers = cited_ids(text)
     unknown = [m for m in markers if f"c{m}" not in claim_ids]
     if unknown:
         raise ValueError(f"{where} cites unknown claims {unknown}")
