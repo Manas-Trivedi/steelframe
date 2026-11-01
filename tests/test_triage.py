@@ -119,3 +119,16 @@ class RunTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EvalScoreTests(unittest.TestCase):
+    def test_score_counts_keep_drop_and_missed_keeps(self):
+        from steelframe.pipeline.triage_eval import score
+        labels = [(3, "A"), (2, "B"), (0, "C"), (1, "D")]
+        preds = [(3, "A"), (1, "B"), (2, "C"), (1, "D")]
+        result = score(labels, preds)
+        self.assertEqual(result["missed_keeps"], 1)
+        self.assertEqual(result["labelled_keeps"], 2)
+        self.assertEqual(result["keep_agreement"], 0.5)
+        self.assertEqual(result["within_one"], 0.75)
+        self.assertEqual(result["topic_match_on_keeps"], 1.0)
