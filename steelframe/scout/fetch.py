@@ -17,11 +17,12 @@ class FetchFailed(Exception):
     """A rate limit, server error or network failure that kept failing after the retries."""
 
 
-def fetch(url, *, timeout=20, attempts=3, sleep=time.sleep, opener=urllib.request.urlopen):
+def fetch(url, *, data=None, timeout=20, attempts=3, sleep=time.sleep, opener=urllib.request.urlopen):
+    """GET `url`, or POST the bytes in `data` (the archive pages are ASP.NET forms)."""
     last = None
     for attempt in range(attempts):
         try:
-            request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            request = urllib.request.Request(url, data=data, headers={"User-Agent": USER_AGENT})
             with opener(request, timeout=timeout) as response:
                 body = response.read(MAX_BYTES + 1)
             if len(body) > MAX_BYTES:
