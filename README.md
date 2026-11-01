@@ -25,7 +25,7 @@ Most current affairs products fall into two groups. News scrapers collect headli
 
 > Steelframe is an independent project. It is not affiliated with, endorsed by, or connected to the Union Public Service Commission. "UPSC" appears here only to describe the exam.
 
-> **Status: pre-alpha.** Nothing here is production-ready. The repository currently holds the project definition and, shortly, the evaluation harness. See the [roadmap](#roadmap).
+> **Status: pre-alpha.** The pipeline and the site are built and run end to end on real press releases, but the writing has **not** yet been tested against coaching material by human reviewers, and the site has not been opened in a real browser. Nothing here is production-ready. See [what the benchmark run does and does not show](docs/pipeline/BENCHMARK_RUN.md).
 
 ## Principles
 
@@ -79,31 +79,42 @@ Work proceeds in order. Each phase must be reviewed before the next starts.
 | App | Reader, syllabus navigation, revision, accounts. |
 | Launch | Closed beta, correction process, public release decision. |
 
+## Try it
+
+Python 3.9 or later. No packages to install. Node is only needed for the browser-script tests.
+
+| Task | Command |
+|---|---|
+| Run all tests | `python3 -m unittest discover -s tests -t .` |
+| Fetch the feeds | `python3 -m steelframe.scout.run` |
+| Run the whole daily pipeline | `python3 -m steelframe.pipeline.daily` (needs free API keys in `.env`, see `.env.example`) |
+| Audit published pieces | `python3 -m steelframe.ops.audit run` |
+| Build the site | `python3 -m steelframe.site.build`, then open `site/dist/index.html` |
+
+Only free models are used, and the router refuses anything else. A daily workflow exists in `.github/workflows/daily.yml`; it does nothing until switched on.
+
+## Where to read next
+
+| Topic | Document |
+|---|---|
+| The pipeline's shape | [PIPELINE_DESIGN.md](docs/pipeline/PIPELINE_DESIGN.md) |
+| Each stage | [Triage](docs/pipeline/TRIAGE.md), [Researcher](docs/pipeline/RESEARCHER.md), [Writer](docs/pipeline/WRITER.md), [Checks](docs/pipeline/CHECKS.md), [Examiner](docs/pipeline/EXAMINER.md), [Gate and daily run](docs/pipeline/GATE.md) |
+| Evidence the pipeline works | [Bake-off](docs/pipeline/BAKEOFF.md), [Benchmark run](docs/pipeline/BENCHMARK_RUN.md) |
+| Design | [Direction](docs/design/DESIGN_DIRECTION.md), [Language](docs/design/DESIGN_LANGUAGE.md), [3D concepts](docs/design/3D_CONCEPTS.md) |
+| The app | [Stack](docs/app/STACK.md), [Site](docs/app/SITE.md) |
+| After publishing | [Corrections, audits and the alarm](docs/operations/CORRECTIONS.md) |
+
 ## Repository layout
 
-The repository is at its starting point. Directories are added as each phase begins.
-
 ```
-steelframe/
-  data/
-    benchmark/
-    past_papers/
-    syllabus/
-  docs/
-    evals/
-      ACCURACY_AUDIT.md
-      PAST_PAPERS_POLICY.md
-      BACKTEST.md
-      BENCHMARK_SET.md
-      BLIND_REVIEW.md
-      forms/
-      PAST_PAPER_TAGGING.md
-    PRODUCT.md
-    QUALITY_RUBRIC.md
-  tools/
-    past_papers/
-  LICENSE
-  README.md
+steelframe/        Python package: llm/ (free-model router), scout/, pipeline/, ops/, site/
+site/              Static assets (CSS tokens, styles, scripts) and site.json
+config/            Feeds, model routes and quotas, publish-gate settings
+data/              Syllabus topics, past-paper tags, benchmark list, Triage labels, source list
+docs/              Product, rubric, evals, pipeline, design, app, operations
+tests/             Python tests, and tests/js for the browser logic
+tools/             One-off scripts (past papers, PIB probe)
+.github/workflows/ The daily job (off by default)
 ```
 
 ## Contributing
