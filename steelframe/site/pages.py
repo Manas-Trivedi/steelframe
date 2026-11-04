@@ -1,5 +1,4 @@
 """Page templates. Plain functions that return HTML strings."""
-from urllib.parse import urlencode
 
 from .render import claim_table, esc, json_for_script, render_paragraph, render_text, sections_html
 
@@ -37,7 +36,7 @@ def page(site, title, body, root="", description=""):
 </main>
 <footer class="site">
   <p>{esc(NOTICE)}</p>
-  <p><a href="{base}corrections.html">Corrections</a> · <a href="{esc(site['repo'])}">Source code and rubric</a> · Apache License 2.0</p>
+  <p><a href="{base}corrections.html">Corrections</a> · Apache License 2.0</p>
 </footer>
 <script src="{base}assets/logic.js" defer></script>
 <script src="{base}assets/app.js" defer></script>
@@ -100,9 +99,6 @@ def editorial_page(site, e, past_links):
     corrections = "".join(f'<p class="correction" role="note"><strong>Correction, {esc(c["date"])}:</strong> {esc(c["text"])}</p>'
                           for c in e.get("corrections", []))
     past = "".join(f'<li><a href="{esc(url)}">{esc(label)}</a></li>' for label, url in past_links) or "<li>None tagged yet</li>"
-    issue_url = esc(f"{site['repo']}/issues/new?" + urlencode({
-        "title": f"Error report: {e['title']}",
-        "body": f"Piece: {e['slug']}\nClaim number or text:\nWhat is wrong:\nSource that shows it:"}))
     meta = {"slug": e["slug"], "title": e["title"], "date": e["date"], "topic": e["topic"]}
     body = f"""{corrections}
 <article class="piece" data-meta="{esc(json_for_script(meta))}">
@@ -131,7 +127,6 @@ def editorial_page(site, e, past_links):
       <p>{len(past_links)} on this topic. Question text is not stored; the links open the official paper.</p>
       <ul>{past}</ul>
       <h2>Found a mistake?</h2>
-      <p><a href="{issue_url}">Report an error</a></p>
     </aside>
   </div>
   <div id="drawer" class="drawer" role="dialog" aria-modal="false" aria-label="Source" hidden>
@@ -193,6 +188,5 @@ def corrections_page(site, corrections):
     body = f"""<h1>Corrections</h1>
 <p class="meta">A correction is added here, dated, and shown at the top of the piece. Nothing is changed silently.</p>
 {table}
-<h2>Report an error</h2>
-<p>Every piece has a "Report an error" link in its margin. It opens a form on <a href="{esc(site['repo'])}/issues">our issue tracker</a>.</p>"""
+"""
     return page(site, "Corrections", body)

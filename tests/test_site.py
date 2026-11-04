@@ -12,7 +12,7 @@ from steelframe.site import build, render
 from steelframe.taxonomy import load_topics
 from tests.test_writer import good_draft, pack
 
-SITE = {"title": "Steelframe", "tagline": "t", "repo": "https://example.test/repo", "base_path": ""}
+SITE = {"title": "Steelframe", "tagline": "t", "base_path": ""}
 TOPICS = load_topics()
 HOSTILE = '<script>alert("x")</script>'
 
@@ -125,13 +125,13 @@ class BuildTests(unittest.TestCase):
         self.build(store)
         page = self.read("p/" + os.listdir(os.path.join(self.out, "p"))[0])
         for needle in ('data-depth="brief"', 'data-depth="editorial"', 'data-depth="deep"', 'class="claim"', 'id="claims"',
-                       "Mains question", "Recall questions", "Report an error", "https://www.upsc.gov.in/", 'role="dialog"',
+                       "Mains question", "Recall questions", "https://www.upsc.gov.in/", 'role="dialog"',
                        '<link rel="stylesheet" href="../assets/tokens.css">'):
             self.assertTrue(needle in page, f"missing: {needle}")
         data = json.loads(page.split('id="claims">')[1].split("</script>")[0])
         self.assertIn("<mark>Rs. 1,09,019 crore</mark>", data["1"]["passage_html"])
         self.assertEqual(data["1"]["url"], "https://pib.test/1")
-        self.assertTrue("issues/new?title=Error+report%3A+Tax+devolution&amp;body=Piece%3A" in page)
+        self.assertNotIn("github", page.lower())
 
     def test_hostile_model_output_cannot_inject_markup(self):
         store = make_store()
