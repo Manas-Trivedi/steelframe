@@ -19,7 +19,7 @@ def page(site, title, body, root="", description=""):
 <meta name="description" content="{esc(description or site['tagline'])}">
 <link rel="stylesheet" href="{base}assets/tokens.css">
 <link rel="stylesheet" href="{base}assets/style.css">
-<script>document.documentElement.dataset.js = "1"; try {{ var t = localStorage.getItem("sf.theme"); if (t) document.documentElement.dataset.theme = t; }} catch (e) {{}}</script>
+<script>document.documentElement.dataset.js = "1"; try {{ var t = JSON.parse(localStorage.getItem("sf.theme")); if (t) document.documentElement.dataset.theme = t; }} catch (e) {{}}</script>
 </head>
 <body data-root="{base}">
 <a class="skip" href="#main">Skip to the text</a>

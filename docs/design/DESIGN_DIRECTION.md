@@ -63,7 +63,7 @@ Reading times assume 200 words a minute (assumption, to check with aspirants).
 | Meaning never rests on colour alone: the claim underline is a pattern, not only a hue | Colour-blind readers |
 | Motion respects the reader's "reduce motion" setting | Vestibular comfort |
 | Text can be enlarged to 200 percent without breaking the layout | Low vision |
-| Light and dark themes follow the device | Night reading |
+| Light by default; dark or follow-the-device in settings | Night reading |
 
 ## What can go wrong
 

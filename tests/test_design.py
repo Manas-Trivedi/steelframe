@@ -23,7 +23,7 @@ def contrast(a, b):
 
 LIGHT = block(":root {")
 DARK = block(':root[data-theme="dark"]')
-DARK_AUTO = block(':root:not([data-theme="light"])')
+DARK_AUTO = block(':root[data-theme="system"]')
 
 # (text colour, background) pairs that appear in the product, all needing 4.5 to 1 (WCAG AA for body text)
 PAIRS = [("ink", "bg"), ("ink", "surface"), ("muted", "bg"), ("muted", "surface"), ("accent", "bg"),

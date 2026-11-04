@@ -232,11 +232,11 @@
     var depth = el("select", { id: "pref-depth" }, ["brief", "editorial", "deep"].map(function (d) { return el("option", { value: d, text: d === "deep" ? "Deep dive" : d.charAt(0).toUpperCase() + d.slice(1) }); }));
     depth.value = load("depth", "editorial");
     depth.addEventListener("change", function () { save("depth", depth.value); });
-    var theme = el("select", { id: "pref-theme" }, [el("option", { value: "", text: "Follow my device" }), el("option", { value: "light", text: "Light" }), el("option", { value: "dark", text: "Dark" })]);
-    theme.value = load("theme", "");
+    var theme = el("select", { id: "pref-theme" }, [el("option", { value: "system", text: "Follow my device" }), el("option", { value: "light", text: "Light" }), el("option", { value: "dark", text: "Dark" })]);
+    theme.value = load("theme", "") || "light";
     theme.addEventListener("change", function () {
       save("theme", theme.value);
-      if (theme.value) document.documentElement.dataset.theme = theme.value; else delete document.documentElement.dataset.theme;
+      document.documentElement.dataset.theme = theme.value;
     });
     host.appendChild(el("p", {}, [el("label", { "for": "pref-depth", text: "Default reading depth " }), depth]));
     host.appendChild(el("p", {}, [el("label", { "for": "pref-theme", text: "Theme " }), theme]));
